@@ -13,8 +13,14 @@ export function Spinner({ size = 24, className = '' }) {
   )
 }
 
-// Branded loader: a magnifying glass sweeping over the HIRA shield.
+// Branded loader: a magnifying glass scanning across the HIRA shield.
 export function MagnifierLoader({ size = 96 }) {
+  // Serpentine scan path over the shield surface (loops back to start smoothly).
+  const sweep = {
+    x: [-4, 4, 4, -4, 0, -4],
+    y: [-4, -4, 1, 1, 5, -4],
+    rotate: [-12, 8, 8, -12, 2, -12],
+  }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-label="Loading">
       {/* shield */}
@@ -25,17 +31,28 @@ export function MagnifierLoader({ size = 96 }) {
         strokeWidth="1.3"
         strokeLinejoin="round"
       />
-      {/* magnifier sweeping across the shield */}
+      {/* inner crest line for a bit of depth */}
+      <path d="M12 5.2v13.2" stroke="#bfdbfe" strokeWidth="0.8" strokeLinecap="round" />
+      {/* magnifier scanning across the shield */}
       <motion.g
         stroke="#1d4ed8"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinecap="round"
-        animate={{ x: [-3.5, 3.5, 2.5, -2.5, -3.5], y: [-2.5, -1, 3, 2, -2.5], rotate: [-6, 4, 6, -4, -6] }}
-        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+        animate={sweep}
+        transition={{ duration: 3.4, ease: 'easeInOut', repeat: Infinity, times: [0, 0.22, 0.44, 0.66, 0.85, 1] }}
         style={{ transformOrigin: '11px 10px' }}
       >
-        <circle cx="10.6" cy="9.8" r="2.7" fill="rgba(37,99,235,0.14)" />
-        <path d="m12.7 11.9 2.6 2.6" />
+        {/* lens glint pulses as it "magnifies" */}
+        <motion.circle
+          cx="10.6"
+          cy="9.8"
+          r="2.8"
+          fill="rgba(37,99,235,0.16)"
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 1.2, ease: 'easeInOut', repeat: Infinity }}
+          style={{ transformOrigin: '10.6px 9.8px' }}
+        />
+        <path d="m12.8 12 2.7 2.7" />
       </motion.g>
     </svg>
   )
