@@ -92,6 +92,32 @@ npm run deploy            # build + deploy everything (rules + hosting)
 The default project (`hira-3c898`) is set in `.firebaserc`. Hosting serves the Vite `dist/`
 output with an SPA rewrite (all routes → `index.html`) so React Router deep links work.
 
+## Deploy (Vercel)
+
+Live: **https://hira-ruddy.vercel.app** · Repo: **https://github.com/sarath200795/hira**
+
+The `VITE_FIREBASE_*` variables are set in the Vercel project (Production), and `vercel.json`
+adds the SPA rewrite. Manual deploy:
+
+```bash
+vercel build --prod --yes
+vercel deploy --prebuilt --prod --yes
+```
+
+**Auto-deploy on push** — `.github/workflows/deploy.yml` deploys to Vercel on every push to
+`main`. It needs one secret:
+
+```bash
+# create a token at https://vercel.com/account/tokens, then:
+gh secret set VERCEL_TOKEN
+```
+
+(Use the GitHub Action **or** Vercel's dashboard Git integration — not both, to avoid double deploys.)
+
+> ⚠️ **Authorize the deploy domain in Firebase** or sign-in fails with `auth/unauthorized-domain`:
+> Firebase Console → **Authentication → Settings → Authorized domains → Add domain** →
+> `hira-ruddy.vercel.app` (and your Firebase Hosting domain if you use it).
+
 ## Features
 
 - **Login / Sign up / Register organization** — email-password auth, org-scoped data.
