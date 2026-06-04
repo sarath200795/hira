@@ -4,11 +4,11 @@
 // (src/pages/Legal.jsx) read from here so the prose stays generic.
 // ─────────────────────────────────────────────────────────────────────────────
 export const LEGAL = {
-  companyName: '[COMPANY NAME]',
+  companyName: 'WE EHS',
   productName: 'HIRA',
-  contactEmail: '[CONTACT EMAIL]',
-  jurisdiction: '[JURISDICTION / GOVERNING LAW]',
-  effectiveDate: '[EFFECTIVE DATE]',
+  contactEmail: 'sarath200795@gmail.com',
+  jurisdiction: 'India',
+  effectiveDate: '5 June 2026',
 }
 
 // The four legal pages + their routes (used for nav + cross-links).
