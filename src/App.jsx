@@ -12,6 +12,7 @@ import SetupNeeded from './pages/SetupNeeded'
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
 const RegisterOrg = lazy(() => import('./pages/RegisterOrg'))
+const Legal = lazy(() => import('./pages/Legal'))
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const CreateAssessment = lazy(() => import('./pages/CreateAssessment'))
@@ -42,6 +43,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/register-org" element={<RegisterOrg />} />
+          <Route path="/privacy" element={<Legal kind="privacy" />} />
+          <Route path="/terms" element={<Legal kind="terms" />} />
+          <Route path="/data-retention" element={<Legal kind="retention" />} />
+          <Route path="/cookies" element={<Legal kind="cookies" />} />
 
           <Route path="/app" element={<AppShell />}>
             <Route index element={<Navigate to="/app/dashboard" replace />} />
