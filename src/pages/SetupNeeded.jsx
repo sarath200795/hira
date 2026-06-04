@@ -21,7 +21,7 @@ export default function SetupNeeded() {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="mb-4 flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 text-white"><Logo size={28} /></div>
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-card"><Logo size={28} /></div>
           <div>
             <h1 className="text-2xl font-extrabold">HIRA</h1>
             <p className="text-sm text-white/60">Connect Firebase to get started</p>

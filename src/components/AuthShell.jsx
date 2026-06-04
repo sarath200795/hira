@@ -18,7 +18,7 @@ export default function AuthShell({ children }) {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/15 text-white backdrop-blur">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white shadow-card">
             <Logo size={26} />
           </div>
           <div className="leading-tight">
@@ -83,7 +83,7 @@ export default function AuthShell({ children }) {
           transition={{ duration: 0.4 }}
         >
           <div className="mb-6 flex items-center gap-2 lg:hidden">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-500 text-white shadow-glow">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-white shadow-clay-sm">
               <Logo size={20} />
             </span>
             <span className="leading-tight">

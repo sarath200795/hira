@@ -59,7 +59,7 @@ export default function Layout() {
   const SidebarContent = (
     <div className="flex h-full flex-col gap-1 overflow-y-auto px-3 py-4">
       <div className="mb-4 flex items-center gap-3 px-2">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500 text-white shadow-glow">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-glow">
           <Logo size={22} />
         </div>
         <div className="min-w-0">
