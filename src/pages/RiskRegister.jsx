@@ -91,7 +91,13 @@ export default function RiskRegister() {
           {rows.map((r, i) => {
             const initialBad = isNonAcceptable(r.initial)
             return (
-              <motion.div key={`${r.assessmentId}-${r.hazard.id}-${i}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="card p-4">
+              <motion.div
+                key={`${r.assessmentId}-${r.hazard.id}-${i}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i, 8) * 0.04, duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                className="card p-4"
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-bold text-ink-900">{hazName(r.hazard)}</p>

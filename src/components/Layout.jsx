@@ -135,15 +135,16 @@ export default function Layout() {
               className="fixed inset-0 z-40 bg-ink-950/60 lg:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, transition: { duration: 0.18 } }}
+              transition={{ duration: 0.28 }}
               onClick={close}
             />
+            {/* iOS-style drawer curve; exit is quicker than enter. */}
             <motion.aside
               className="fixed inset-y-0 left-0 z-50 w-64 bg-ink-950 lg:hidden"
-              initial={{ x: -280 }}
-              animate={{ x: 0 }}
-              exit={{ x: -280 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              initial={{ x: -288 }}
+              animate={{ x: 0, transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] } }}
+              exit={{ x: -288, transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] } }}
             >
               {SidebarContent}
             </motion.aside>

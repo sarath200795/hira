@@ -137,15 +137,16 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' })
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          exit={{ opacity: 0, transition: { duration: 0.12, ease: [0.23, 1, 0.32, 1] } }}
         >
           <div className="absolute inset-0 bg-ink-950/40 backdrop-blur-sm" onClick={onClose} />
+          {/* Modals stay centered (not origin-aware); enter on a spring, exit
+              faster on a tween — slow where the user decides, fast on response. */}
           <motion.div
             className={`card relative z-10 w-full ${maxWidth} overflow-hidden`}
             initial={{ scale: 0.94, opacity: 0, y: 16 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.96, opacity: 0, y: 8 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+            animate={{ scale: 1, opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 26 } }}
+            exit={{ scale: 0.96, opacity: 0, y: 8, transition: { duration: 0.14, ease: [0.23, 1, 0.32, 1] } }}
           >
             <div className="flex items-center justify-between border-b border-clay-200/60 px-5 py-4">
               <h3 className="text-base font-bold text-ink-900">{title}</h3>
