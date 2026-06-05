@@ -27,7 +27,7 @@ function NavItem({ to, icon: Icon, label, onClick }) {
       end
       onClick={onClick}
       className={({ isActive }) =>
-        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+        `group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors duration-150 ${
           isActive
             ? 'bg-brand-500 text-white shadow-glow'
             : 'text-ink-300 hover:bg-white/10 hover:text-white'
