@@ -9,6 +9,7 @@ import {
   Filter, Search, X, CalendarClock, Clock,
 } from 'lucide-react'
 import { PageHeader, EmptyState } from '../components/ui'
+import CountUp from '../components/CountUp'
 import { useRa } from '../context/RaContext'
 import { summarize } from '../lib/raStats'
 import { BANDS } from '../lib/riskMatrix'
@@ -183,7 +184,7 @@ export default function Dashboard() {
                   <div className="mb-3 grid h-11 w-11 place-items-center rounded-xl text-white" style={{ backgroundColor: k.color }}>
                     <k.icon size={20} />
                   </div>
-                  <p className="text-3xl font-black text-ink-900">{k.value}</p>
+                  <p className="text-3xl font-black text-ink-900"><CountUp value={k.value} /></p>
                   <p className="text-sm font-medium text-ink-500">{k.label}</p>
                 </>
               )
@@ -191,9 +192,18 @@ export default function Dashboard() {
               // Tint the tile with its risk-level colour for easy identification.
               const tileStyle = { backgroundColor: `${k.color}14`, boxShadow: `inset 4px 0 0 ${k.color}` }
               return (
-                <motion.div key={k.label} variants={card} custom={i} initial="hidden" animate="show">
+                <motion.div
+                  key={k.label}
+                  variants={card}
+                  custom={i}
+                  initial="hidden"
+                  animate="show"
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 26 }}
+                >
                   {k.to
-                    ? <Link to={k.to} className={`${cls} transition hover:-translate-y-0.5 hover:shadow-glow`} style={tileStyle}>{inner}</Link>
+                    ? <Link to={k.to} className={cls} style={tileStyle}>{inner}</Link>
                     : <div className={cls} style={tileStyle}>{inner}</div>}
                 </motion.div>
               )

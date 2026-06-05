@@ -42,7 +42,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Segoe UI', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'Segoe UI', 'sans-serif'],
+        display: ['Sora', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         clay: '1.5rem',
