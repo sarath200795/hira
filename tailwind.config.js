@@ -29,16 +29,16 @@ export default {
           900: '#1c2230',
           950: '#11151d',
         },
-        // Warm coral-clay neutrals: peach/ivory base so raised "clay" surfaces pop
-        // while keeping the brand (coral) identity for accents.
+        // Cool neutral surfaces (slate-tinted) — clean white cards on a soft
+        // blue-grey canvas, so the blue brand reads as the single accent.
         clay: {
-          bg: '#f2e8e2',
-          surface: '#fbf4ef',
-          50: '#fdf8f5',
-          100: '#f7ede7',
-          200: '#efe0d7',
-          300: '#e3ccbf',
-          400: '#d3b3a3',
+          bg: '#f4f6fb',
+          surface: '#ffffff',
+          50: '#f8fafc',
+          100: '#eff3f9',
+          200: '#e3e8f0',
+          300: '#cdd5e3',
+          400: '#94a3b8',
         },
       },
       fontFamily: {
@@ -48,16 +48,14 @@ export default {
         clay: '1.5rem',
       },
       boxShadow: {
-        glow: '0 0 0 1px rgba(59,130,246,0.15), 0 10px 40px -10px rgba(59,130,246,0.35)',
-        card: '0 1px 2px rgba(16,24,40,0.06), 0 12px 32px -12px rgba(16,24,40,0.18)',
-        clay: '6px 6px 14px rgba(190,160,148,0.40), -6px -6px 14px rgba(255,255,255,0.90)',
-        'clay-sm': '3px 3px 8px rgba(190,160,148,0.35), -3px -3px 8px rgba(255,255,255,0.85)',
-        'clay-inset':
-          'inset 4px 4px 8px rgba(190,160,148,0.40), inset -4px -4px 8px rgba(255,255,255,0.90)',
-        'clay-pressed':
-          'inset 5px 5px 10px rgba(190,160,148,0.50), inset -4px -4px 8px rgba(255,255,255,0.80)',
-        'clay-brand':
-          '5px 5px 12px rgba(59,130,246,0.28), -5px -5px 12px rgba(255,255,255,0.75)',
+        // Clean, cool elevation system (replaces the warm claymorphism shadows).
+        glow: '0 0 0 1px rgba(37,99,235,0.12), 0 10px 34px -12px rgba(37,99,235,0.40)',
+        card: '0 1px 2px rgba(16,24,40,0.05), 0 10px 28px -14px rgba(16,24,40,0.18)',
+        clay: '0 1px 2px rgba(16,24,40,0.04), 0 6px 20px -8px rgba(16,24,40,0.12)',
+        'clay-sm': '0 1px 2px rgba(16,24,40,0.06)',
+        'clay-inset': 'inset 0 1px 2px rgba(16,24,40,0.06)',
+        'clay-pressed': 'inset 0 2px 4px rgba(16,24,40,0.10)',
+        'clay-brand': '0 6px 16px -4px rgba(37,99,235,0.40)',
       },
       keyframes: {
         shimmer: {
