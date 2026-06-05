@@ -9,6 +9,7 @@ import {
   Upload,
   ShieldAlert,
   CalendarClock,
+  Building2,
   LogOut,
   Menu,
   Clock,
@@ -94,6 +95,7 @@ export default function Layout() {
       </p>
       <NavItem to="/app/create" icon={FilePlus2} label="Create Risk Assessment" onClick={close} />
       <NavItem to="/app/bulk-import" icon={Upload} label="Bulk Import" onClick={close} />
+      <NavItem to="/app/organization" icon={Building2} label="Organization" onClick={close} />
 
       <div className="mt-auto pt-4">
         <div className="rounded-xl bg-white/5 p-3">

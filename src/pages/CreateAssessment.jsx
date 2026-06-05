@@ -9,7 +9,7 @@ import { PageHeader, Spinner } from '../components/ui'
 import { RiskBadge, MiniMatrix } from '../components/RiskBits'
 import { useAuth } from '../context/AuthContext'
 import { useRa } from '../context/RaContext'
-import { createAssessment, updateAssessment } from '../lib/firestore'
+import { createAssessment, updateAssessment, updateOrgSites } from '../lib/firestore'
 import { riskLevel, PROBABILITY, SEVERITY } from '../lib/riskMatrix'
 import {
   HAZARD_GROUPS, categoriesForGroup, typesForCategory,
@@ -59,10 +59,12 @@ export default function CreateAssessment() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { orgId, profile, user } = useAuth()
-  const { assessments } = useRa()
+  const { assessments, sites } = useRa()
   const [form, setForm] = useState(emptyForm)
   const [busy, setBusy] = useState(false)
   const [loadedId, setLoadedId] = useState(null)
+  const [addingSite, setAddingSite] = useState(false)
+  const [newSite, setNewSite] = useState('')
 
   // Edit mode: hydrate form from the existing assessment once it's available.
   useEffect(() => {
@@ -83,6 +85,29 @@ export default function CreateAssessment() {
   }, [id, assessments, loadedId])
 
   const internalMembers = useMemo(() => form.members.filter((m) => m.type === 'internal' && m.name.trim()), [form.members])
+
+  // Site dropdown options = org sites ∪ the assessment's current site (legacy/edit).
+  const siteOptions = useMemo(() => {
+    const set = new Set(sites)
+    if (form.siteName) set.add(form.siteName)
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [sites, form.siteName])
+
+  const confirmAddSite = async () => {
+    const name = newSite.trim()
+    if (!name) return
+    if (!sites.some((s) => s.toLowerCase() === name.toLowerCase())) {
+      try {
+        await updateOrgSites(orgId, [...sites, name].sort((a, b) => a.localeCompare(b)))
+      } catch (e) {
+        toast.error(e.message || 'Could not add site')
+        return
+      }
+    }
+    setForm((f) => ({ ...f, siteName: name }))
+    setNewSite('')
+    setAddingSite(false)
+  }
 
   // ── State helpers ───────────────────────────────────────────────────────────
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }))
@@ -168,7 +193,28 @@ export default function CreateAssessment() {
           </div>
           <div>
             <label className="label">Facility / Site Name</label>
-            <input className="input" placeholder="e.g. HYD8" value={form.siteName} onChange={(e) => setField('siteName', e.target.value)} />
+            {addingSite ? (
+              <div className="flex gap-2">
+                <input
+                  className="input"
+                  placeholder="New site name"
+                  value={newSite}
+                  autoFocus
+                  onChange={(e) => setNewSite(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); confirmAddSite() } }}
+                />
+                <button type="button" className="btn-primary px-3" onClick={confirmAddSite}>Add</button>
+                <button type="button" className="btn-ghost px-3" onClick={() => { setAddingSite(false); setNewSite('') }}>Cancel</button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <select className="input" value={form.siteName} onChange={(e) => setField('siteName', e.target.value)}>
+                  <option value="">{siteOptions.length ? 'Select a site…' : 'No sites yet — add one →'}</option>
+                  {siteOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button type="button" className="btn-ghost px-3" onClick={() => setAddingSite(true)} title="Add a new site"><Plus size={16} /></button>
+              </div>
+            )}
           </div>
           <div>
             <label className="label">Risk Assessment Date</label>

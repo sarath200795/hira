@@ -98,6 +98,16 @@ export function subscribeOrgUsers(orgId, cb) {
   return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))))
 }
 
+/** Live org document (name, address, sites, …). */
+export function subscribeOrg(orgId, cb) {
+  return onSnapshot(orgRef(orgId), (snap) => cb(snap.exists() ? { id: snap.id, ...snap.data() } : null))
+}
+
+/** Replace the org's list of sites/facilities. */
+export async function updateOrgSites(orgId, sites) {
+  await updateDoc(orgRef(orgId), { sites })
+}
+
 // ── Risk assessments ──────────────────────────────────────────────────────────
 
 const ASSESSMENT_LOAD_CAP = 1000

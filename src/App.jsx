@@ -21,6 +21,7 @@ const AssessmentView = lazy(() => import('./pages/AssessmentView'))
 const BulkImport = lazy(() => import('./pages/BulkImport'))
 const RiskRegister = lazy(() => import('./pages/RiskRegister'))
 const ActionTracker = lazy(() => import('./pages/ActionTracker'))
+const Organization = lazy(() => import('./pages/Organization'))
 
 function AppShell() {
   return (
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="assessment/:id" element={<AssessmentView />} />
             <Route path="risk-register" element={<RiskRegister />} />
             <Route path="action-tracker" element={<ActionTracker />} />
+            <Route path="organization" element={<Organization />} />
             <Route path="bulk-import" element={<BulkImport />} />
           </Route>
 

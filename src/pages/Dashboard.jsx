@@ -70,14 +70,14 @@ function HierBar({ data }) {
 }
 
 export default function Dashboard() {
-  const { assessments, loading } = useRa()
+  const { assessments, loading, sites: orgSites } = useRa()
 
   const [site, setSite] = useState('')
   const [location, setLocation] = useState('')
   const [title, setTitle] = useState('')
   const [search, setSearch] = useState('')
 
-  const sites = useMemo(() => uniq(assessments.map((a) => a.siteName)), [assessments])
+  const sites = useMemo(() => uniq([...orgSites, ...assessments.map((a) => a.siteName)]), [orgSites, assessments])
   const locations = useMemo(() => uniq(assessments.map((a) => a.location)), [assessments])
   const titles = useMemo(() => uniq(assessments.map((a) => a.name)), [assessments])
 
