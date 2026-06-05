@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FolderOpen, Filter, Search, X, FilePlus2, Eye, Pencil, Trash2, AlertTriangle, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { PageHeader, EmptyState, Modal } from '../components/ui'
+import { PageHeader, EmptyState, Modal, Skeleton } from '../components/ui'
 import { RiskBadge } from '../components/RiskBits'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
@@ -106,7 +106,19 @@ export default function Repository() {
         </span>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading && assessments.length === 0 ? (
+        <div className="card overflow-hidden p-4">
+          <Skeleton className="mb-3 h-6 w-1/3" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 border-t border-clay-100 py-3">
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
           title={loading ? 'Loading…' : filtersActive ? 'No assessments match your filters' : 'No assessments yet'}
@@ -133,7 +145,7 @@ export default function Repository() {
                 {filtered.map((a) => {
                   const r = topRisk(a)
                   return (
-                    <tr key={a.id} className="cursor-pointer transition hover:bg-clay-100/40" onClick={() => navigate(`/app/assessment/${a.id}`)}>
+                    <tr key={a.id} className="group cursor-pointer transition hover:bg-clay-100/40" onClick={() => navigate(`/app/assessment/${a.id}`)}>
                       <td className="px-4 py-3 font-semibold text-ink-900">{a.name}</td>
                       <td className="px-4 py-3">{a.siteName || '—'}</td>
                       <td className="px-4 py-3">{a.location || '—'}</td>
@@ -142,7 +154,7 @@ export default function Repository() {
                       <td className="px-4 py-3 text-center">{countHazards(a)}</td>
                       <td className="px-4 py-3"><RiskBadge risk={r} size="sm" /></td>
                       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1 opacity-100 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                           <Link to={`/app/assessment/${a.id}`} className="rounded-lg p-2 text-ink-500 shadow-clay-sm transition hover:bg-clay-100 hover:text-ink-800" title="View"><Eye size={16} /></Link>
                           <button onClick={() => { try { exportAssessmentPdf(a) } catch (err) { toast.error(err.message || 'Could not export PDF') } }} className="rounded-lg p-2 text-ink-500 shadow-clay-sm transition hover:bg-clay-100 hover:text-ink-800" title="Export PDF"><FileDown size={16} /></button>
                           <Link to={`/app/create/${a.id}`} className="rounded-lg p-2 text-ink-500 shadow-clay-sm transition hover:bg-clay-100 hover:text-ink-800" title="Edit"><Pencil size={16} /></Link>

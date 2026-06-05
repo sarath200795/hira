@@ -13,9 +13,11 @@ import {
   LogOut,
   Menu,
   Clock,
+  Search,
 } from 'lucide-react'
 import Logo from './Logo'
 import { Modal } from './ui'
+import CommandPalette from './CommandPalette'
 import { useAuth } from '../context/AuthContext'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
@@ -82,6 +84,15 @@ export default function Layout() {
           <p className="truncate text-xs text-ink-400">{orgName}</p>
         </div>
       </div>
+
+      <button
+        onClick={() => { close(); window.dispatchEvent(new Event('open-command-palette')) }}
+        className="mb-2 flex w-full items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-sm text-ink-300 transition-colors hover:bg-white/10 hover:text-white"
+      >
+        <Search size={15} />
+        <span className="flex-1 text-left">Search…</span>
+        <kbd className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold text-ink-400">Ctrl K</kbd>
+      </button>
 
       <p className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-widest text-ink-500">
         Overview
@@ -163,6 +174,13 @@ export default function Layout() {
           <span className="flex items-center gap-2 font-extrabold">
             <Logo size={18} className="text-brand-500" /> HIRA
           </span>
+          <button
+            onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+            className="ml-auto rounded-xl p-2 text-ink-500 shadow-clay-sm transition hover:bg-clay-100 active:shadow-clay-pressed"
+            title="Search (Ctrl K)"
+          >
+            <Search size={18} />
+          </button>
         </header>
 
         <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
@@ -186,6 +204,9 @@ export default function Layout() {
           ))}
         </footer>
       </div>
+
+      {/* Global ⌘K / Ctrl+K command palette */}
+      <CommandPalette />
 
       {/* Idle session warning — auto sign-out countdown */}
       <Modal open={warning} onClose={() => {}} title="Still there?">

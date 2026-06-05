@@ -83,6 +83,11 @@ export function FullScreenLoader({ label = 'Loading…' }) {
   )
 }
 
+// ── Skeleton placeholder (loading state) ─────────────────────────────────────
+export function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse rounded-lg bg-clay-200/70 ${className}`} />
+}
+
 // ── Pill badge with a dot color ───────────────────────────────────────────────
 export function Badge({ color = '#64748b', children, soft = true, className = '' }) {
   return (
