@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { X, Send, Sparkles, Lightbulb } from 'lucide-react'
+import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } from 'framer-motion'
+import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
 import { pageGuide, suggestedQuestions, answer } from '../lib/assistant'
@@ -12,28 +12,20 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, v) } catch { /* ignore */ } },
 }
 const loop = (d) => ({ duration: d, repeat: Infinity, ease: 'easeInOut' })
+const IDLE_SLEEP_MS = 3 * 60 * 1000
 
-// Palette
-const SKIN = '#e8b48f'
-const SKIN_D = '#c98b62'
-const HAT = '#f4b400'
-const HAT_D = '#c98a00'
-const VEST = '#2563eb'
-const VEST_D = '#1e40af'
-const STRIPE = '#fde047'
-const TROUSER = '#1e3a8a'
-const SHOE = '#0b1220'
+const SKIN = '#e8b48f', SKIN_D = '#c98b62', HAT = '#f4b400', HAT_D = '#c98a00'
+const VEST = '#2563eb', VEST_D = '#1e40af', STRIPE = '#fde047', TROUSER = '#1e3a8a', SHOE = '#0b1220'
 
-// ── Realistic-ish Safety Manager: hard hat + hi-vis vest, two-segment arms.
-// Modes: walk · idle · think · scratch · write · wave · search. ───────────────
+// ── Safety Manager "Sam": hard hat + hi-vis vest, two-segment arms ───────────
 function Character({ mode = 'idle', reduced = false }) {
   const walking = mode === 'walk'
+  const sleeping = mode === 'sleep'
 
   const legL = reduced ? { rotate: 0 } : walking ? { rotate: [0, 24, 0, -24, 0] } : { rotate: 0 }
   const legR = reduced ? { rotate: 0 } : walking ? { rotate: [0, -24, 0, 24, 0] } : { rotate: 0 }
   const legT = walking ? loop(0.6) : { duration: 0.3 }
 
-  // Arm joints: uA* = upper arm (shoulder), fA* = forearm (elbow).
   let uAL = { rotate: 0 }, fAL = { rotate: 0 }, uALT = { duration: 0.4 }, fALT = { duration: 0.4 }
   let uAR = { rotate: 0 }, fAR = { rotate: 0 }, uART = { duration: 0.4 }, fART = { duration: 0.4 }
   let head = { rotate: 0 }, headT = { duration: 0.4 }
@@ -41,6 +33,9 @@ function Character({ mode = 'idle', reduced = false }) {
   if (reduced) {
     if (mode === 'write') { uAL = { rotate: -52 }; fAL = { rotate: -78 }; uAR = { rotate: -44 }; fAR = { rotate: -66 }; head = { rotate: 8 } }
     else if (mode === 'think') { uAR = { rotate: -42 }; fAR = { rotate: -95 }; head = { rotate: -6 } }
+    else if (sleeping) head = { rotate: 12 }
+  } else if (sleeping) {
+    uAL = { rotate: 4 }; uAR = { rotate: -4 }; head = { rotate: 12 }
   } else if (walking) {
     uAL = { rotate: [0, -18, 0, 18, 0] }; uALT = loop(0.6)
     uAR = { rotate: [0, 18, 0, -18, 0] }; uART = loop(0.6)
@@ -53,18 +48,18 @@ function Character({ mode = 'idle', reduced = false }) {
     uAR = { rotate: -150 }; fAR = { rotate: [-34, -52, -34] }; fART = loop(0.4); head = { rotate: -4 }
   } else if (mode === 'wave') {
     uAR = { rotate: -150 }; fAR = { rotate: [-12, 22, -12] }; fART = loop(0.5)
-  } else { // idle / search
+  } else {
     uAL = { rotate: [0, 3, 0] }; uALT = loop(3.2)
     uAR = { rotate: [0, -3, 0] }; uART = loop(3.2)
     if (mode === 'search') { uAR = { rotate: -34 }; fAR = { rotate: -34 }; head = { rotate: [-9, 9, -9] }; headT = loop(1.6) }
   }
 
   const bob = reduced ? { y: 0 } : walking ? { y: [0, -2, 0] } : { y: [0, -1.2, 0] }
-  const bobT = walking ? loop(0.6) : loop(2.8)
+  const bobT = walking ? loop(0.6) : loop(sleeping ? 3.6 : 2.8)
   const blink = reduced ? undefined : { scaleY: [1, 1, 0.1, 1] }
   const blinkT = reduced ? undefined : { duration: 0.32, times: [0, 0.85, 0.92, 1], repeat: Infinity, repeatDelay: 3 }
 
-  const Arm = ({ shoulder, elbow, upper, fore, uT, fT, side, withPen }) => (
+  const Arm = ({ shoulder, elbow, upper, fore, uT, fT, withPen }) => (
     <motion.g style={{ transformOrigin: `${shoulder[0]}px ${shoulder[1]}px` }} animate={upper} transition={uT}>
       <rect x={shoulder[0] - 2.75} y={shoulder[1]} width="5.5" height={elbow[1] - shoulder[1]} rx="2.7" fill={VEST} stroke={VEST_D} strokeWidth="0.7" />
       <motion.g style={{ transformOrigin: `${elbow[0]}px ${elbow[1]}px` }} animate={fore} transition={fT}>
@@ -78,7 +73,6 @@ function Character({ mode = 'idle', reduced = false }) {
   return (
     <svg width="62" height="116" viewBox="0 0 64 120" fill="none" aria-hidden="true">
       <motion.g animate={bob} transition={bobT}>
-        {/* legs */}
         <motion.g style={{ transformOrigin: '28px 74px' }} animate={legL} transition={legT}>
           <rect x="24.5" y="74" width="6.5" height="32" rx="2.4" fill={TROUSER} />
           <rect x="22.5" y="104" width="11" height="6.5" rx="3" fill={SHOE} />
@@ -88,21 +82,15 @@ function Character({ mode = 'idle', reduced = false }) {
           <rect x="30.5" y="104" width="11" height="6.5" rx="3" fill={SHOE} />
         </motion.g>
 
-        {/* torso: shirt + hi-vis vest */}
         <rect x="22" y="33" width="20" height="42" rx="6" fill="#e7eef8" />
-        <path d="M22 40v-1a6 6 0 0 1 6-6h8a6 6 0 0 1 6 6v1z" fill="#e7eef8" />
         <path d="M23 41h7l2 5 2-5h7v33a3 3 0 0 1-3 3H26a3 3 0 0 1-3-3z" fill={VEST} stroke={VEST_D} strokeWidth="0.8" />
         <rect x="25" y="58" width="14" height="2.6" fill={STRIPE} />
         <rect x="27.5" y="44" width="2.4" height="31" fill={STRIPE} />
         <rect x="34.1" y="44" width="2.4" height="31" fill={STRIPE} />
-
-        {/* neck */}
         <rect x="29" y="29" width="6" height="6" fill={SKIN} />
 
-        {/* left arm */}
-        <Arm shoulder={[24, 39]} elbow={[24, 54]} upper={uAL} fore={fAL} uT={uALT} fT={fALT} side="L" />
+        <Arm shoulder={[24, 39]} elbow={[24, 54]} upper={uAL} fore={fAL} uT={uALT} fT={fALT} />
 
-        {/* clipboard while writing */}
         {mode === 'write' && (
           <g transform="rotate(-8 33 60)">
             <rect x="24" y="50" width="19" height="24" rx="2" fill="#c8d2e0" stroke="#94a3b8" strokeWidth="0.8" />
@@ -114,38 +102,43 @@ function Character({ mode = 'idle', reduced = false }) {
           </g>
         )}
 
-        {/* right arm (pen while writing) */}
-        <Arm shoulder={[40, 39]} elbow={[40, 54]} upper={uAR} fore={fAR} uT={uART} fT={fART} side="R" withPen={mode === 'write'} />
+        <Arm shoulder={[40, 39]} elbow={[40, 54]} upper={uAR} fore={fAR} uT={uART} fT={fART} withPen={mode === 'write'} />
 
-        {/* head */}
         <motion.g style={{ transformOrigin: '32px 31px' }} animate={head} transition={headT}>
           <circle cx="23.5" cy="23" r="2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.5" />
           <circle cx="40.5" cy="23" r="2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.5" />
           <circle cx="32" cy="22" r="9.2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.6" />
-          {/* hair sideburns */}
           <path d="M23.5 20c0-3 2-5 4-5l-1 6z" fill="#4a3526" />
           <path d="M40.5 20c0-3-2-5-4-5l1 6z" fill="#4a3526" />
-          {/* eyes */}
-          <motion.g style={{ transformOrigin: '32px 22px' }} animate={blink} transition={blinkT}>
-            <circle cx="28.6" cy="22" r="1.5" fill="#fff" /><circle cx="29" cy="22.2" r="0.9" fill="#1f2937" />
-            <circle cx="35.4" cy="22" r="1.5" fill="#fff" /><circle cx="35.8" cy="22.2" r="0.9" fill="#1f2937" />
-          </motion.g>
-          {/* brows + smile */}
+          {sleeping ? (
+            <>
+              <path d="M27 22.4q1.6 1.4 3.2 0" stroke={SKIN_D} strokeWidth="0.9" strokeLinecap="round" fill="none" />
+              <path d="M33.8 22.4q1.6 1.4 3.2 0" stroke={SKIN_D} strokeWidth="0.9" strokeLinecap="round" fill="none" />
+            </>
+          ) : (
+            <motion.g style={{ transformOrigin: '32px 22px' }} animate={blink} transition={blinkT}>
+              <circle cx="28.6" cy="22" r="1.5" fill="#fff" /><circle cx="29" cy="22.2" r="0.9" fill="#1f2937" />
+              <circle cx="35.4" cy="22" r="1.5" fill="#fff" /><circle cx="35.8" cy="22.2" r="0.9" fill="#1f2937" />
+            </motion.g>
+          )}
           <path d="M27 18.6c1-0.6 2.4-0.6 3.4 0" stroke="#4a3526" strokeWidth="0.8" strokeLinecap="round" />
           <path d="M34 18.6c1-0.6 2.4-0.6 3.4 0" stroke="#4a3526" strokeWidth="0.8" strokeLinecap="round" />
-          <path d="M29 26.5c1.6 1.4 4.4 1.4 6 0" stroke={SKIN_D} strokeWidth="0.9" strokeLinecap="round" fill="none" />
-          {/* hard hat */}
+          {!sleeping && <path d="M29 26.5c1.6 1.4 4.4 1.4 6 0" stroke={SKIN_D} strokeWidth="0.9" strokeLinecap="round" fill="none" />}
           <path d="M21 17a11 9.5 0 0 1 22 0z" fill={HAT} />
           <rect x="19" y="15.6" width="26" height="2.8" rx="1.4" fill={HAT_D} />
           <rect x="31" y="8.6" width="2" height="7" fill={HAT_D} />
         </motion.g>
 
-        {/* thought dots */}
         {mode === 'think' && !reduced && (
           <motion.g initial={{ opacity: 0 }} animate={{ opacity: [0.2, 1, 0.2] }} transition={loop(1.4)}>
-            <circle cx="46" cy="16" r="1.4" fill="#94a3b8" />
-            <circle cx="50" cy="11" r="2" fill="#94a3b8" />
-            <circle cx="54" cy="6" r="2.6" fill="#94a3b8" />
+            <circle cx="46" cy="16" r="1.4" fill="#94a3b8" /><circle cx="50" cy="11" r="2" fill="#94a3b8" /><circle cx="54" cy="6" r="2.6" fill="#94a3b8" />
+          </motion.g>
+        )}
+
+        {sleeping && !reduced && (
+          <motion.g initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 0], y: [0, -10] }} transition={loop(2.2)} fill="#94a3b8" fontFamily="sans-serif" fontWeight="800">
+            <text x="44" y="14" fontSize="6">z</text>
+            <text x="48" y="9" fontSize="8">Z</text>
           </motion.g>
         )}
       </motion.g>
@@ -157,9 +150,7 @@ function Bubble({ from, children }) {
   const mine = from === 'user'
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[85%] whitespace-pre-line rounded-2xl px-3 py-2 text-sm ${mine ? 'bg-brand-600 text-white' : 'bg-clay-100 text-ink-800'}`}>
-        {children}
-      </div>
+      <div className={`max-w-[85%] whitespace-pre-line rounded-2xl px-3 py-2 text-sm ${mine ? 'bg-brand-600 text-white' : 'bg-clay-100 text-ink-800'}`}>{children}</div>
     </div>
   )
 }
@@ -171,6 +162,7 @@ export default function Assistant() {
   const reduced = useReducedMotion()
   const uid = user?.uid || 'anon'
 
+  const [enabled, setEnabled] = useState(() => ls.get(`hira:guide:enabled:${uid}`) !== '0')
   const [open, setOpen] = useState(false)
   const [tip, setTip] = useState(null)
   const [messages, setMessages] = useState([])
@@ -178,11 +170,16 @@ export default function Assistant() {
   const scrollRef = useRef(null)
 
   const [mode, setMode] = useState('idle')
-  const [x, setX] = useState(80)
-  const [walkDur, setWalkDur] = useState(1.4)
   const [facing, setFacing] = useState(-1)
-  const xRef = useRef(80)
-  const pausedRef = useRef(false)
+  const [asleep, setAsleep] = useState(false)
+  const [pinned, setPinned] = useState(() => ls.get(`hira:guide:pinned:${uid}`) === '1')
+
+  const savedPos = useMemo(() => { try { return JSON.parse(ls.get(`hira:guide:pos:${uid}`) || 'null') } catch { return null } }, [uid])
+  const mx = useMotionValue(savedPos?.x ?? 80)
+  const my = useMotionValue(savedPos?.y ?? 0)
+  const lastRef = useRef(Date.now())
+  const asleepRef = useRef(false)
+  useEffect(() => { asleepRef.current = asleep }, [asleep])
 
   const guide = useMemo(() => pageGuide(location.pathname), [location.pathname])
   const chips = useMemo(() => suggestedQuestions(location.pathname), [location.pathname])
@@ -191,51 +188,63 @@ export default function Assistant() {
   const writingPage = location.pathname.includes('/create')
   const homeX = () => Math.max(20, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 96)
 
-  // Stationary (not wandering) when greeting, tip showing, writing, or reduced.
-  const stationary = open || !!tip || reduced || writingPage
-  useEffect(() => { pausedRef.current = stationary }, [stationary])
-
+  // Idle → sleep after 3 minutes of no activity; any activity wakes Sam.
   useEffect(() => {
-    if (open) { const hx = homeX(); setX(hx); xRef.current = hx; setWalkDur(0.7); setFacing(-1); setMode('wave'); return undefined }
-    if (tip) { const hx = homeX(); setX(hx); xRef.current = hx; setWalkDur(0.7); setFacing(-1); setMode('idle'); return undefined }
-    if (writingPage) { setX(46); xRef.current = 46; setWalkDur(0.7); setFacing(1); setMode('write'); return undefined }
-    if (reduced) { const hx = homeX(); setX(hx); xRef.current = hx; setFacing(-1); setMode('idle'); return undefined }
-    // wander
+    const bump = () => { lastRef.current = Date.now(); if (asleepRef.current) setAsleep(false) }
+    const evs = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart']
+    evs.forEach((e) => window.addEventListener(e, bump, { passive: true }))
+    const iv = setInterval(() => { if (Date.now() - lastRef.current > IDLE_SLEEP_MS) setAsleep(true) }, 15000)
+    return () => { evs.forEach((e) => window.removeEventListener(e, bump)); clearInterval(iv) }
+  }, [])
+
+  // Movement / pose state machine.
+  useEffect(() => {
+    if (!enabled) return undefined
+    if (asleep) { setMode('sleep'); return undefined }
+    if (open || tip) {
+      if (!pinned) { setFacing(-1); animate(mx, homeX(), { duration: 0.7, ease: 'linear' }); animate(my, 0, { duration: 0.4 }) }
+      setMode(open ? 'wave' : 'idle')
+      return undefined
+    }
+    if (writingPage) {
+      if (!pinned) { setFacing(1); animate(mx, 46, { duration: 0.7, ease: 'linear' }); animate(my, 0, { duration: 0.4 }) }
+      setMode('write')
+      return undefined
+    }
+    if (reduced || pinned) { setMode('idle'); return undefined }
+    // roam
     let alive = true
     let t
+    let anim
     const rand = (a, b) => a + Math.random() * (b - a)
     const step = () => {
-      if (!alive || pausedRef.current) return
-      const from = xRef.current
+      if (!alive) return
+      const from = mx.get()
       const maxX = Math.max(90, (window.innerWidth || 1000) - 120)
       const target = Math.round(rand(20, maxX))
       const dur = Math.min(6, Math.max(1.2, Math.abs(target - from) / 110))
       setFacing(target >= from ? 1 : -1)
-      setWalkDur(dur); setMode('walk'); setX(target); xRef.current = target
+      setMode('walk')
+      anim = animate(mx, target, { duration: dur, ease: 'linear' })
       t = setTimeout(() => {
-        if (!alive || pausedRef.current) return
+        if (!alive) return
         setMode(['idle', 'search', 'think', 'scratch', 'wave'][Math.floor(Math.random() * 5)])
         t = setTimeout(step, rand(3200, 6000))
       }, dur * 1000 + 150)
     }
     t = setTimeout(step, 1400)
-    return () => { alive = false; clearTimeout(t) }
-  }, [open, tip, writingPage, reduced])
+    return () => { alive = false; clearTimeout(t); if (anim?.stop) anim.stop() }
+  }, [enabled, asleep, open, tip, writingPage, reduced, pinned, mx, my])
 
+  // Welcome / per-page tip.
   useEffect(() => {
-    if (open) return undefined
+    if (!enabled || open) return undefined
     const welcomed = ls.get(`hira:guide:welcomed:${uid}`) === '1'
-    if (!welcomed) {
-      const t = setTimeout(() => setTip({ welcome: true, title: 'Hi, I’m Sam — your Safety Guide 👷', text: 'I’ll walk you through the app and answer questions about your risks. Tap me anytime.' }), 1400)
-      return () => clearTimeout(t)
-    }
+    if (!welcomed) { const t = setTimeout(() => setTip({ welcome: true, title: 'Hi, I’m Sam — your Safety Guide 👷', text: 'Drag me anywhere, ask me about your risks, or hide me from the menu in my chat. Tap me to start.' }), 1400); return () => clearTimeout(t) }
     const seenKey = `hira:guide:tip:${uid}:${guide.title}`
-    if (ls.get(seenKey) !== '1') {
-      const t = setTimeout(() => setTip({ title: guide.title, text: guide.tips[0] }), 900)
-      return () => clearTimeout(t)
-    }
+    if (ls.get(seenKey) !== '1') { const t = setTimeout(() => setTip({ title: guide.title, text: guide.tips[0] }), 900); return () => clearTimeout(t) }
     return undefined
-  }, [location.pathname, open, uid, guide])
+  }, [location.pathname, open, uid, guide, enabled])
 
   const dismissTip = () => {
     if (tip?.welcome) ls.set(`hira:guide:welcomed:${uid}`, '1')
@@ -245,34 +254,59 @@ export default function Assistant() {
   const openPanel = () => {
     if (tip?.welcome) ls.set(`hira:guide:welcomed:${uid}`, '1')
     if (tip) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
-    setTip(null); setOpen(true)
+    setTip(null); setOpen(true); lastRef.current = Date.now(); setAsleep(false)
   }
+  const onDragEnd = () => {
+    const vw = window.innerWidth || 1000
+    const vh = window.innerHeight || 800
+    mx.set(Math.min(Math.max(mx.get(), 0), vw - 90))
+    my.set(Math.min(Math.max(my.get(), -(vh - 170)), 0))
+    setPinned(true)
+    ls.set(`hira:guide:pinned:${uid}`, '1')
+    ls.set(`hira:guide:pos:${uid}`, JSON.stringify({ x: mx.get(), y: my.get() }))
+    lastRef.current = Date.now(); setAsleep(false)
+  }
+  const setRoam = () => { setPinned(false); ls.set(`hira:guide:pinned:${uid}`, '0'); animate(my, 0, { duration: 0.4 }) }
+  const disableGuide = () => { setOpen(false); setEnabled(false); ls.set(`hira:guide:enabled:${uid}`, '0') }
+  const enableGuide = () => { setEnabled(true); ls.set(`hira:guide:enabled:${uid}`, '1') }
+
   const ask = (text) => {
     const t = (text || '').trim()
     if (!t) return
     setMessages((m) => [...m, { from: 'user', text: t }, { from: 'guide', text: answer(t, ctx) }])
     setInput('')
   }
-  useEffect(() => {
-    if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-  }, [messages, open])
+  useEffect(() => { if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages, open])
+
+  // Disabled → small restore button only.
+  if (!enabled) {
+    return (
+      <button onClick={enableGuide} className="no-print fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-2 text-xs font-bold text-white shadow-card hover:bg-brand-700" title="Show the Safety Guide">
+        <MessageCircle size={15} /> Guide
+      </button>
+    )
+  }
+
+  const shownMode = open ? 'wave' : asleep ? 'sleep' : mode
 
   return (
     <div className="no-print">
-      {/* Walking character */}
-      <motion.div className="fixed bottom-1 left-0 z-40" animate={{ x }} transition={{ duration: walkDur, ease: 'linear' }}>
+      {/* Draggable walking character */}
+      <motion.div
+        className="fixed bottom-1 left-0 z-40 cursor-grab active:cursor-grabbing"
+        style={{ x: mx, y: my }}
+        drag
+        dragMomentum={false}
+        dragElastic={0.04}
+        onDragStart={() => { setMode('idle'); lastRef.current = Date.now(); setAsleep(false) }}
+        onDragEnd={onDragEnd}
+      >
         <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Safety Guide">
           <div style={{ transform: `scaleX(${facing})` }}>
-            <LottieAvatar
-              mode={open ? 'wave' : mode}
-              size={116}
-              fallback={<Character mode={open ? 'wave' : mode} reduced={reduced} />}
-            />
+            <LottieAvatar mode={shownMode} size={116} fallback={<Character mode={shownMode} reduced={reduced} />} />
           </div>
           {overdue > 0 && (
-            <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">
-              {overdue}
-            </span>
+            <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">{overdue}</span>
           )}
         </button>
       </motion.div>
@@ -290,9 +324,7 @@ export default function Assistant() {
             <button onClick={dismissTip} className="absolute right-2 top-2 rounded-lg p-1 text-ink-400 hover:bg-clay-100"><X size={14} /></button>
             <p className="pr-4 text-sm font-bold text-ink-900">{tip.title}</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-600">{tip.text}</p>
-            <button onClick={openPanel} className="btn-soft mt-2.5 px-3 py-1.5 text-xs">
-              <Sparkles size={13} /> {tip.welcome ? 'Show me around' : 'Ask Sam'}
-            </button>
+            <button onClick={openPanel} className="btn-soft mt-2.5 px-3 py-1.5 text-xs"><Sparkles size={13} /> {tip.welcome ? 'Show me around' : 'Ask Sam'}</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -319,27 +351,29 @@ export default function Assistant() {
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
               <div className="rounded-2xl bg-brand-50 p-3">
-                <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-700">
-                  <Lightbulb size={13} /> {guide.title}
-                </p>
-                <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-ink-600">
-                  {guide.tips.map((t, i) => <li key={i}>• {t}</li>)}
-                </ul>
+                <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-brand-700"><Lightbulb size={13} /> {guide.title}</p>
+                <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-ink-600">{guide.tips.map((t, i) => <li key={i}>• {t}</li>)}</ul>
               </div>
               {overdue > 0 && <Bubble from="guide">⚠️ You have {overdue} overdue action(s). Ask me “what’s overdue?” or open the Action Tracker.</Bubble>}
               {messages.map((m, i) => <Bubble key={i} from={m.from}>{m.text}</Bubble>)}
             </div>
 
             <div className="flex flex-wrap gap-1.5 border-t border-clay-200 px-3 pt-2.5">
-              {chips.map((c) => (
-                <button key={c} onClick={() => ask(c)} className="chip bg-clay-100 text-ink-600 hover:bg-clay-200">{c}</button>
-              ))}
+              {chips.map((c) => <button key={c} onClick={() => ask(c)} className="chip bg-clay-100 text-ink-600 hover:bg-clay-200">{c}</button>)}
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); ask(input) }} className="flex items-center gap-2 p-3">
+            <form onSubmit={(e) => { e.preventDefault(); ask(input) }} className="flex items-center gap-2 px-3 pt-3">
               <input className="input py-2" placeholder="Ask about your risks…" value={input} onChange={(e) => setInput(e.target.value)} />
               <button type="submit" className="btn-primary px-3 py-2" disabled={!input.trim()}><Send size={16} /></button>
             </form>
+
+            {/* Controls: roam/pin + hide */}
+            <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px] text-ink-400">
+              <button onClick={setRoam} className="inline-flex items-center gap-1 hover:text-ink-700" disabled={!pinned}>
+                <Move size={12} /> {pinned ? 'Let Sam roam' : 'Drag Sam to pin him'}
+              </button>
+              <button onClick={disableGuide} className="inline-flex items-center gap-1 hover:text-ink-700"><EyeOff size={12} /> Hide guide</button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
