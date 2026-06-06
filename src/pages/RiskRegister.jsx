@@ -7,7 +7,7 @@ import { PageHeader, EmptyState } from '../components/ui'
 import { RiskBadge } from '../components/RiskBits'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { updateAssessment } from '../lib/firestore'
+import { updateAssessment, logActivity } from '../lib/firestore'
 import { riskLists, isNonAcceptable } from '../lib/raStats'
 import { categoryLabel } from '../lib/constants'
 
@@ -34,7 +34,7 @@ const hazName = (h) => h.hazardType || categoryLabel(h.hazardCategory)
 
 export default function RiskRegister() {
   const { assessments, loading } = useRa()
-  const { orgId } = useAuth()
+  const { orgId, user, profile } = useAuth()
   const navigate = useNavigate()
   const lists = useMemo(() => riskLists(assessments), [assessments])
   const [tab, setTab] = useState('actionRequired')
@@ -50,6 +50,11 @@ export default function RiskRegister() {
     }))
     try {
       await updateAssessment(orgId, a.id, { activities })
+      logActivity(orgId, { uid: user?.uid, name: profile?.name }, {
+        type: 'alarp',
+        message: `declared ALARP on “${hazName(row.hazard)}” (${row.assessmentName})`,
+        assessmentId: row.assessmentId,
+      })
       toast.success('Declared ALARP — residual risk accepted')
     } catch (e) {
       toast.error(e.message || 'Could not update')

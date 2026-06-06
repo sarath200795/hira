@@ -108,6 +108,30 @@ export async function updateOrgSites(orgId, sites) {
   await updateDoc(orgRef(orgId), { sites })
 }
 
+// ── Activity log (append-only audit trail) ────────────────────────────────────
+const activityCol = (orgId) => collection(db, 'organizations', orgId, 'activity')
+
+/** Record a user action. Fire-and-forget — never blocks the main operation. */
+export function logActivity(orgId, actor, { type, message, assessmentId = null }) {
+  if (!orgId) return
+  addDoc(activityCol(orgId), {
+    type: type || 'event',
+    message: message || '',
+    assessmentId,
+    actorUid: actor?.uid || null,
+    actorName: actor?.name || 'Someone',
+    at: serverTimestamp(),
+  }).catch((e) => {
+    // eslint-disable-next-line no-console
+    console.warn('[HIRA] activity log failed:', e?.message || e)
+  })
+}
+
+export function subscribeActivity(orgId, cb, max = 50) {
+  const q = query(activityCol(orgId), orderBy('at', 'desc'), limit(max))
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+}
+
 // ── Risk assessments ──────────────────────────────────────────────────────────
 
 const ASSESSMENT_LOAD_CAP = 1000

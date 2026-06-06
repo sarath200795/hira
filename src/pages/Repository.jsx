@@ -7,7 +7,7 @@ import { PageHeader, EmptyState, Modal, Skeleton } from '../components/ui'
 import { RiskBadge } from '../components/RiskBits'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { deleteAssessment } from '../lib/firestore'
+import { deleteAssessment, logActivity } from '../lib/firestore'
 import { residualRisk } from '../lib/raStats'
 import { exportAssessmentPdf } from '../lib/pdf'
 
@@ -31,7 +31,7 @@ const uniq = (arr) => Array.from(new Set(arr.filter(Boolean))).sort()
 
 export default function Repository() {
   const { assessments, loading } = useRa()
-  const { orgId } = useAuth()
+  const { orgId, user, profile } = useAuth()
   const navigate = useNavigate()
 
   const [site, setSite] = useState('')
@@ -63,6 +63,10 @@ export default function Repository() {
     if (!toDelete) return
     try {
       await deleteAssessment(orgId, toDelete.id)
+      logActivity(orgId, { uid: user?.uid, name: profile?.name }, {
+        type: 'deleted',
+        message: `deleted risk assessment “${toDelete.name}”`,
+      })
       toast.success('Assessment deleted')
     } catch (e) {
       toast.error(e.message || 'Could not delete')

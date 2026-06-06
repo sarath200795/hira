@@ -68,6 +68,10 @@ service cloud.firestore {
       match /assessments/{docId} {
         allow read, write: if signedIn() && orgId == myOrgId();
       }
+      match /activity/{docId} {
+        allow read, create: if signedIn() && orgId == myOrgId();
+        allow update, delete: if false;
+      }
     }
   }
 }

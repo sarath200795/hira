@@ -18,6 +18,7 @@ import {
 import Logo from './Logo'
 import { Modal } from './ui'
 import CommandPalette from './CommandPalette'
+import Assistant from './Assistant'
 import { useAuth } from '../context/AuthContext'
 import { useIdleTimeout } from '../hooks/useIdleTimeout'
 import { IDLE_MS, WARN_MS, formatMMSS } from '../lib/session'
@@ -207,6 +208,9 @@ export default function Layout() {
 
       {/* Global ⌘K / Ctrl+K command palette */}
       <CommandPalette />
+
+      {/* Animated HIRA Guide mascot + insights assistant */}
+      <Assistant />
 
       {/* Idle session warning — auto sign-out countdown */}
       <Modal open={warning} onClose={() => {}} title="Still there?">

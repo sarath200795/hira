@@ -7,7 +7,7 @@ import { PageHeader, EmptyState } from '../components/ui'
 import { RiskBadge } from '../components/RiskBits'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { updateAssessment } from '../lib/firestore'
+import { updateAssessment, logActivity } from '../lib/firestore'
 import { flattenAdditionalControls, isOverdue, isNonAcceptable, todayISO } from '../lib/raStats'
 import { CONTROL_STATUS } from '../lib/constants'
 
@@ -31,7 +31,7 @@ const memberName = (members, id) => members?.find((m) => m.id === id)?.name || '
 
 export default function ActionTracker() {
   const { assessments, loading } = useRa()
-  const { orgId } = useAuth()
+  const { orgId, user, profile } = useAuth()
   const [filter, setFilter] = useState('all')
   const [focus, setFocus] = useState('all')
   const [overdueOnly, setOverdueOnly] = useState(false)
@@ -95,6 +95,13 @@ export default function ActionTracker() {
     )
     try {
       await updateAssessment(orgId, a.id, { activities })
+      if (patch.status) {
+        logActivity(orgId, { uid: user?.uid, name: profile?.name }, {
+          type: 'action',
+          message: `set action “${row.control.description || row.control.hierarchy}” to ${patch.status} (${row.assessmentName})`,
+          assessmentId: row.assessmentId,
+        })
+      }
     } catch (e) {
       toast.error(e.message || 'Could not update')
     }

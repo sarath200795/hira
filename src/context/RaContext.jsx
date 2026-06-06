@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from './AuthContext'
-import { subscribeAssessments, subscribeOrg } from '../lib/firestore'
+import { subscribeAssessments, subscribeOrg, subscribeActivity } from '../lib/firestore'
 import { summarize } from '../lib/raStats'
 
 const RaContext = createContext(null)
@@ -10,6 +10,7 @@ export function RaProvider({ children }) {
   const { orgId } = useAuth()
   const [assessments, setAssessments] = useState([])
   const [org, setOrg] = useState(null)
+  const [activity, setActivity] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,7 +21,8 @@ export function RaProvider({ children }) {
       setLoading(false)
     })
     const u2 = subscribeOrg(orgId, setOrg)
-    return () => { u1(); u2() }
+    const u3 = subscribeActivity(orgId, setActivity)
+    return () => { u1(); u2(); u3() }
   }, [orgId])
 
   const value = useMemo(() => ({
@@ -28,8 +30,9 @@ export function RaProvider({ children }) {
     assessments,
     org,
     sites: org?.sites || [],
+    activity,
     summary: summarize(assessments),
-  }), [assessments, org, loading])
+  }), [assessments, org, activity, loading])
 
   return <RaContext.Provider value={value}>{children}</RaContext.Provider>
 }

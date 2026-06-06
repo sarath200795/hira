@@ -9,7 +9,7 @@ import { PageHeader, Spinner } from '../components/ui'
 import { RiskBadge, MiniMatrix } from '../components/RiskBits'
 import { useAuth } from '../context/AuthContext'
 import { useRa } from '../context/RaContext'
-import { createAssessment, updateAssessment, updateOrgSites } from '../lib/firestore'
+import { createAssessment, updateAssessment, updateOrgSites, logActivity } from '../lib/firestore'
 import { riskLevel, PROBABILITY, SEVERITY } from '../lib/riskMatrix'
 import {
   HAZARD_GROUPS, categoriesForGroup, typesForCategory,
@@ -161,13 +161,20 @@ export default function CreateAssessment() {
 
     setBusy(true)
     try {
+      const actor = { uid: user?.uid, name: profile?.name }
+      let savedId = id
       if (id) {
         await updateAssessment(orgId, id, payload)
         toast.success('Assessment updated')
       } else {
-        await createAssessment(orgId, payload, { uid: user?.uid, name: profile?.name })
+        savedId = await createAssessment(orgId, payload, actor)
         toast.success('Assessment created')
       }
+      logActivity(orgId, actor, {
+        type: id ? 'updated' : 'created',
+        message: `${id ? 'updated' : 'created'} risk assessment “${payload.name}”`,
+        assessmentId: savedId,
+      })
       navigate('/app/repository')
     } catch (err) {
       toast.error(err.message || 'Could not save')

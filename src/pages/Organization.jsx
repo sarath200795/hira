@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 import { PageHeader, EmptyState } from '../components/ui'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { updateOrgSites } from '../lib/firestore'
+import { updateOrgSites, logActivity } from '../lib/firestore'
 
 export default function Organization() {
   const { org, sites } = useRa()
-  const { orgId, orgName } = useAuth()
+  const { orgId, orgName, user, profile } = useAuth()
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -33,11 +33,13 @@ export default function Organization() {
     }
     setDraft('')
     await save([...sites, name].sort((a, b) => a.localeCompare(b)))
+    logActivity(orgId, { uid: user?.uid, name: profile?.name }, { type: 'site', message: `added site “${name}”` })
     toast.success(`Added “${name}”`)
   }
 
   const removeSite = async (name) => {
     await save(sites.filter((s) => s !== name))
+    logActivity(orgId, { uid: user?.uid, name: profile?.name }, { type: 'site', message: `removed site “${name}”` })
     toast.success(`Removed “${name}”`)
   }
 

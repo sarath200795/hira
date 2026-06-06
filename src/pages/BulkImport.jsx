@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { PageHeader, Spinner } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import { parseCsv, downloadTemplate, previewRows, CSV_COLUMNS } from '../lib/csv'
-import { bulkCreateAssessments } from '../lib/firestore'
+import { bulkCreateAssessments, logActivity } from '../lib/firestore'
 
 export default function BulkImport() {
   const { orgId, profile, user } = useAuth()
@@ -41,6 +41,10 @@ export default function BulkImport() {
     setCommitting(true)
     try {
       const created = await bulkCreateAssessments(orgId, result.assessments, { uid: user?.uid, name: profile?.name })
+      logActivity(orgId, { uid: user?.uid, name: profile?.name }, {
+        type: 'imported',
+        message: `imported ${created} risk assessment(s) from CSV`,
+      })
       setDone({ created })
       toast.success(`${created} assessment(s) imported`)
       setResult(null)
