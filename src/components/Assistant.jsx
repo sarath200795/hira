@@ -1,11 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, lazy, Suspense, Component } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } from 'framer-motion'
 import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
 import { pageGuide, suggestedQuestions, answer } from '../lib/assistant'
-import LottieAvatar from './LottieAvatar'
+
+// 3D character is heavy (three.js) — load it only when needed.
+const Character3D = lazy(() => import('./Character3D'))
+
+// Falls back to the 2D SVG Sam if WebGL/three fails to load.
+class AvatarBoundary extends Component {
+  constructor(props) { super(props); this.state = { failed: false } }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch() { /* swallow — fallback handles it */ }
+  render() { return this.state.failed ? this.props.fallback : this.props.children }
+}
 
 const ls = {
   get: (k) => { try { return localStorage.getItem(k) } catch { return null } },
@@ -303,7 +313,15 @@ export default function Assistant() {
       >
         <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Safety Guide">
           <div style={{ transform: `scaleX(${facing})` }}>
-            <LottieAvatar mode={shownMode} size={116} fallback={<Character mode={shownMode} reduced={reduced} />} />
+            {reduced ? (
+              <Character mode={shownMode} reduced />
+            ) : (
+              <AvatarBoundary fallback={<Character mode={shownMode} reduced={reduced} />}>
+                <Suspense fallback={<Character mode={shownMode} reduced={reduced} />}>
+                  <Character3D mode={shownMode} />
+                </Suspense>
+              </AvatarBoundary>
+            )}
           </div>
           {overdue > 0 && (
             <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">{overdue}</span>
