@@ -122,6 +122,14 @@ gh secret set VERCEL_TOKEN
 > Firebase Console → **Authentication → Settings → Authorized domains → Add domain** →
 > `hira-ruddy.vercel.app` (and your Firebase Hosting domain if you use it).
 
+## Guide character (Lottie-ready)
+
+The on-screen guide ("Sam") is a built-in animated SVG (walks, thinks, scratches
+head, writes on the Create page). To swap in a designer-made character, drop a
+licensed Lottie JSON + `manifest.json` into `public/lottie/` — see
+[`public/lottie/README.txt`](public/lottie/README.txt). No code changes needed;
+it falls back to the built-in Sam when no files are present.
+
 ## Features
 
 - **Login / Sign up / Register organization** — email-password auth, org-scoped data.

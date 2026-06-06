@@ -1,0 +1,7 @@
+{
+  "default": "character.json",
+  "walk": "walk.json",
+  "write": "write.json",
+  "think": "think.json",
+  "idle": "idle.json"
+}

@@ -5,6 +5,7 @@ import { X, Send, Sparkles, Lightbulb } from 'lucide-react'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
 import { pageGuide, suggestedQuestions, answer } from '../lib/assistant'
+import LottieAvatar from './LottieAvatar'
 
 const ls = {
   get: (k) => { try { return localStorage.getItem(k) } catch { return null } },
@@ -262,7 +263,11 @@ export default function Assistant() {
       <motion.div className="fixed bottom-1 left-0 z-40" animate={{ x }} transition={{ duration: walkDur, ease: 'linear' }}>
         <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Safety Guide">
           <div style={{ transform: `scaleX(${facing})` }}>
-            <Character mode={open ? 'wave' : mode} reduced={reduced} />
+            <LottieAvatar
+              mode={open ? 'wave' : mode}
+              size={116}
+              fallback={<Character mode={open ? 'wave' : mode} reduced={reduced} />}
+            />
           </div>
           {overdue > 0 && (
             <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">
