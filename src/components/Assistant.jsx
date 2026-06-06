@@ -11,28 +11,38 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, v) } catch { /* ignore */ } },
 }
 
-// ── The mascot: blue shield body, blinking eyes, a yellow magnifier ──────────
+// ── The mascot: a Scout Bot in a yellow hard hat + blue hi-vis safety vest ────
 function Mascot({ size = 44, reduced = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <path d="M24 45s16-8 16-21V10l-16-6-16 6v14c0 13 16 21 16 21z" fill="#2563eb" />
-      <path d="M24 45s16-8 16-21V10l-16-6-16 6v14c0 13 16 21 16 21z" stroke="#1e40af" strokeWidth="1.2" />
-      {/* eyes (blink) */}
+      {/* antenna */}
+      <line x1="24" y1="5" x2="24" y2="8.5" stroke="#1e40af" strokeWidth="1.3" strokeLinecap="round" />
+      <circle cx="24" cy="4" r="1.6" fill="#eab308" />
+      {/* hard hat */}
+      <path d="M11.5 13a12.5 10.5 0 0 1 25 0z" fill="#eab308" />
+      <rect x="9.5" y="11.6" width="29" height="2.9" rx="1.45" fill="#ca8a04" />
+      {/* head */}
+      <rect x="13" y="12.5" width="22" height="15" rx="6" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
+      {/* visor */}
+      <rect x="16" y="16" width="16" height="8" rx="4" fill="#0b1220" />
       <motion.g
-        style={{ transformOrigin: '24px 21px' }}
+        style={{ transformOrigin: '24px 20px' }}
         animate={reduced ? undefined : { scaleY: [1, 1, 0.1, 1] }}
         transition={reduced ? undefined : { duration: 0.32, times: [0, 0.85, 0.92, 1], repeat: Infinity, repeatDelay: 3.2 }}
       >
-        <circle cx="19" cy="21" r="3.1" fill="#fff" />
-        <circle cx="29" cy="21" r="3.1" fill="#fff" />
-        <circle cx="19.7" cy="21.4" r="1.5" fill="#0b1220" />
-        <circle cx="29.7" cy="21.4" r="1.5" fill="#0b1220" />
+        <circle cx="21" cy="20" r="2" fill="#60a5fa" />
+        <circle cx="27" cy="20" r="2" fill="#eab308" />
       </motion.g>
-      {/* smile */}
-      <path d="M20 27c1.4 1.5 6.6 1.5 8 0" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
-      {/* magnifier */}
-      <circle cx="34" cy="31" r="4.4" fill="rgba(234,179,8,0.25)" stroke="#eab308" strokeWidth="2" />
-      <path d="M37.4 34.4 41 38" stroke="#eab308" strokeWidth="2.2" strokeLinecap="round" />
+      {/* neck */}
+      <rect x="21.5" y="27" width="5" height="3" fill="#1e40af" />
+      {/* blue hi-vis safety vest / body */}
+      <path d="M9 44v-6a9 9 0 0 1 9-9h12a9 9 0 0 1 9 9v6z" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
+      {/* V-neck collar */}
+      <path d="M20.5 29 24 33.5 27.5 29z" fill="#1e3a8a" />
+      {/* reflective stripes */}
+      <rect x="11" y="38" width="26" height="2.3" fill="#fde047" />
+      <rect x="17" y="33" width="2.3" height="11" fill="#fde047" />
+      <rect x="28.7" y="33" width="2.3" height="11" fill="#fde047" />
     </svg>
   )
 }

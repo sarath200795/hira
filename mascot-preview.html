@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HIRA Guide — Mascot Options</title>
+<style>
+  :root { --blue:#2563eb; --ink:#1c2230; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Plus Jakarta Sans", system-ui, Segoe UI, sans-serif; background:#f4f6fb; color:var(--ink); }
+  header { background:var(--blue); color:#fff; padding:28px 24px; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:6px 0 0; opacity:.85; font-size:14px; }
+  .grid { display:grid; gap:20px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); padding:24px; max-width:1100px; margin:0 auto; }
+  .card { background:#fff; border:1px solid #e3e8f0; border-radius:18px; padding:20px; text-align:center; box-shadow:0 1px 2px rgba(16,24,40,.05),0 10px 28px -14px rgba(16,24,40,.18); }
+  .stage { height:120px; display:grid; place-items:center; }
+  .num { display:inline-grid; place-items:center; width:24px; height:24px; border-radius:999px; background:#eff3f9; color:var(--blue); font-weight:800; font-size:12px; margin-bottom:6px; }
+  .name { font-weight:800; font-size:16px; margin:8px 0 2px; }
+  .desc { font-size:12.5px; color:#62718c; line-height:1.5; }
+  .m { animation: bob 3.4s ease-in-out infinite; }
+  .eyes { animation: blink 4s infinite; }
+  .sweep { animation: sweep 2.4s linear infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+  @keyframes blink { 0%,92%,100%{transform:scaleY(1)} 96%{transform:scaleY(.1)} }
+  @keyframes sweep { to { transform: rotate(360deg) } }
+</style>
+</head>
+<body>
+<header>
+  <h1>HIRA Guide — pick a mascot 🪄</h1>
+  <p>All 6 are animated (blink + float). Tell me a number and I'll wire it into the app. #1 is the one currently live.</p>
+</header>
+<div class="grid">
+
+  <!-- 1 Shield Buddy (current) -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <path d="M48 90s32-16 32-42V20L48 8 16 20v28c0 26 32 42 32 42z" fill="#2563eb" stroke="#1e40af" stroke-width="2"/>
+        <g class="eyes" style="transform-origin:48px 42px">
+          <circle cx="38" cy="42" r="6" fill="#fff"/><circle cx="58" cy="42" r="6" fill="#fff"/>
+          <circle cx="39.5" cy="43" r="3" fill="#0b1220"/><circle cx="59.5" cy="43" r="3" fill="#0b1220"/>
+        </g>
+        <path d="M40 54c2.6 2.8 13.4 2.8 16 0" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <circle cx="68" cy="62" r="9" fill="rgba(234,179,8,.25)" stroke="#eab308" stroke-width="4"/>
+        <path d="M75 69 84 78" stroke="#eab308" stroke-width="4.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="num">1</span>
+    <div class="name">Shield Buddy <span style="font-weight:600;color:#16a34a;font-size:11px">(current)</span></div>
+    <div class="desc">Your logo shield given a face + a little magnifier. Safe, friendly, on-brand.</div>
+  </div>
+
+  <!-- 2 Detective Lens -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <path d="M62 62 84 84" stroke="#1e40af" stroke-width="9" stroke-linecap="round"/>
+        <circle cx="40" cy="40" r="30" fill="#eff6ff" stroke="#eab308" stroke-width="6"/>
+        <g class="eyes" style="transform-origin:40px 38px">
+          <circle cx="31" cy="38" r="5.5" fill="#0b1220"/><circle cx="49" cy="38" r="5.5" fill="#0b1220"/>
+        </g>
+        <path d="M32 50c3 3 13 3 16 0" stroke="#2563eb" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="30" cy="28" r="4" fill="#fff" opacity=".85"/>
+      </svg>
+    </div>
+    <span class="num">2</span>
+    <div class="name">Detective Lens</div>
+    <div class="desc">The magnifying glass itself is the character — “inspecting your risks”. Playful, literal to insights.</div>
+  </div>
+
+  <!-- 3 Safety Helmet -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <circle cx="48" cy="56" r="26" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+        <path d="M22 46a26 26 0 0 1 52 0z" fill="#eab308"/>
+        <rect x="18" y="44" width="60" height="6" rx="3" fill="#ca8a04"/>
+        <rect x="44" y="22" width="8" height="14" rx="3" fill="#ca8a04"/>
+        <g class="eyes" style="transform-origin:48px 56px">
+          <circle cx="40" cy="56" r="4.5" fill="#0b1220"/><circle cx="56" cy="56" r="4.5" fill="#0b1220"/>
+        </g>
+        <path d="M42 66c2 2 10 2 12 0" stroke="#2563eb" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="num">3</span>
+    <div class="name">Safety Helmet</div>
+    <div class="desc">A friendly face in a hard hat — strongest EHS / workplace-safety signal.</div>
+  </div>
+
+  <!-- 4 Scout Bot -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <line x1="48" y1="14" x2="48" y2="24" stroke="#1e40af" stroke-width="3"/>
+        <circle cx="48" cy="12" r="4" fill="#eab308"/>
+        <rect x="20" y="24" width="56" height="48" rx="16" fill="#2563eb" stroke="#1e40af" stroke-width="2"/>
+        <rect x="28" y="36" width="40" height="22" rx="11" fill="#0b1220"/>
+        <g class="eyes" style="transform-origin:48px 47px">
+          <circle cx="40" cy="47" r="4.5" fill="#60a5fa"/><circle cx="56" cy="47" r="4.5" fill="#eab308"/>
+        </g>
+        <rect x="40" y="74" width="16" height="6" rx="3" fill="#1e40af"/>
+      </svg>
+    </div>
+    <span class="num">4</span>
+    <div class="name">Scout Bot</div>
+    <div class="desc">A tidy little assistant robot — reads as “AI helper”. Modern + techy.</div>
+  </div>
+
+  <!-- 5 Owl Analyst -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <path d="M26 28l10 16-18-3z" fill="#1e40af"/><path d="M70 28l-10 16 18-3z" fill="#1e40af"/>
+        <ellipse cx="48" cy="54" rx="28" ry="30" fill="#2563eb"/>
+        <ellipse cx="48" cy="62" rx="15" ry="17" fill="#dbeafe"/>
+        <g class="eyes" style="transform-origin:48px 44px">
+          <circle cx="38" cy="44" r="11" fill="#fff" stroke="#eab308" stroke-width="3"/>
+          <circle cx="58" cy="44" r="11" fill="#fff" stroke="#eab308" stroke-width="3"/>
+          <circle cx="38" cy="44" r="4.5" fill="#0b1220"/><circle cx="58" cy="44" r="4.5" fill="#0b1220"/>
+        </g>
+        <path d="M44 52l4 6 4-6z" fill="#eab308"/>
+      </svg>
+    </div>
+    <span class="num">5</span>
+    <div class="name">Owl Analyst</div>
+    <div class="desc">Wise owl with spectacle-eyes — “insight & guidance”. Characterful and memorable.</div>
+  </div>
+
+  <!-- 6 Radar Orb -->
+  <div class="card">
+    <div class="stage">
+      <svg class="m" width="96" height="96" viewBox="0 0 96 96" fill="none">
+        <circle cx="48" cy="48" r="30" fill="#0b1220"/>
+        <circle cx="48" cy="48" r="20" fill="none" stroke="#1e3a8a" stroke-width="1.5"/>
+        <circle cx="48" cy="48" r="10" fill="none" stroke="#1e3a8a" stroke-width="1.5"/>
+        <g class="sweep" style="transform-origin:48px 48px">
+          <path d="M48 48 L48 18 A30 30 0 0 1 74 38 Z" fill="rgba(96,165,250,.35)"/>
+        </g>
+        <circle cx="48" cy="48" r="6" fill="#60a5fa"/>
+        <circle cx="48" cy="48" r="2.5" fill="#fff"/>
+      </svg>
+    </div>
+    <span class="num">6</span>
+    <div class="name">Radar Orb</div>
+    <div class="desc">A sleek scanning radar — “always watching your risks”. Minimal, enterprise, no face.</div>
+  </div>
+
+</div>
+</body>
+</html>
