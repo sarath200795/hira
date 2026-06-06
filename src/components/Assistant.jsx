@@ -10,92 +10,141 @@ const ls = {
   get: (k) => { try { return localStorage.getItem(k) } catch { return null } },
   set: (k, v) => { try { localStorage.setItem(k, v) } catch { /* ignore */ } },
 }
-const REPEAT = (duration) => ({ duration, repeat: Infinity, ease: 'easeInOut' })
+const loop = (d) => ({ duration: d, repeat: Infinity, ease: 'easeInOut' })
 
-// ── Full-body Scout Bot: hard hat + hi-vis vest, with rigged limbs that
-// walk / idle / think / search / wave. Joints are <g> groups rotated by mode. ──
+// Palette
+const SKIN = '#e8b48f'
+const SKIN_D = '#c98b62'
+const HAT = '#f4b400'
+const HAT_D = '#c98a00'
+const VEST = '#2563eb'
+const VEST_D = '#1e40af'
+const STRIPE = '#fde047'
+const TROUSER = '#1e3a8a'
+const SHOE = '#0b1220'
+
+// ── Realistic-ish Safety Manager: hard hat + hi-vis vest, two-segment arms.
+// Modes: walk · idle · think · scratch · write · wave · search. ───────────────
 function Character({ mode = 'idle', reduced = false }) {
   const walking = mode === 'walk'
 
-  const legL = reduced ? { rotate: 0 } : walking ? { rotate: [0, 26, 0, -26, 0] } : { rotate: 0 }
-  const legR = reduced ? { rotate: 0 } : walking ? { rotate: [0, -26, 0, 26, 0] } : { rotate: 0 }
-  const legT = walking ? REPEAT(0.6) : { duration: 0.3 }
+  const legL = reduced ? { rotate: 0 } : walking ? { rotate: [0, 24, 0, -24, 0] } : { rotate: 0 }
+  const legR = reduced ? { rotate: 0 } : walking ? { rotate: [0, -24, 0, 24, 0] } : { rotate: 0 }
+  const legT = walking ? loop(0.6) : { duration: 0.3 }
 
-  const armL = reduced ? { rotate: 0 } : walking ? { rotate: [0, -22, 0, 22, 0] } : { rotate: [0, 5, 0] }
-  const armLT = walking ? REPEAT(0.6) : REPEAT(3)
+  // Arm joints: uA* = upper arm (shoulder), fA* = forearm (elbow).
+  let uAL = { rotate: 0 }, fAL = { rotate: 0 }, uALT = { duration: 0.4 }, fALT = { duration: 0.4 }
+  let uAR = { rotate: 0 }, fAR = { rotate: 0 }, uART = { duration: 0.4 }, fART = { duration: 0.4 }
+  let head = { rotate: 0 }, headT = { duration: 0.4 }
 
-  let armR = { rotate: 0 }
-  let armRT = { duration: 0.4 }
-  if (reduced) { armR = { rotate: mode === 'think' ? -110 : mode === 'search' ? -38 : 0 } }
-  else if (walking) { armR = { rotate: [0, 22, 0, -22, 0] }; armRT = REPEAT(0.6) }
-  else if (mode === 'think') { armR = { rotate: -114 } }
-  else if (mode === 'search') { armR = { rotate: -40 } }
-  else if (mode === 'wave') { armR = { rotate: [-150, -120, -150] }; armRT = REPEAT(0.55) }
-  else { armR = { rotate: [0, -5, 0] }; armRT = REPEAT(3) }
+  if (reduced) {
+    if (mode === 'write') { uAL = { rotate: -52 }; fAL = { rotate: -78 }; uAR = { rotate: -44 }; fAR = { rotate: -66 }; head = { rotate: 8 } }
+    else if (mode === 'think') { uAR = { rotate: -42 }; fAR = { rotate: -95 }; head = { rotate: -6 } }
+  } else if (walking) {
+    uAL = { rotate: [0, -18, 0, 18, 0] }; uALT = loop(0.6)
+    uAR = { rotate: [0, 18, 0, -18, 0] }; uART = loop(0.6)
+  } else if (mode === 'write') {
+    uAL = { rotate: -52 }; fAL = { rotate: -78 }
+    uAR = { rotate: -44 }; fAR = { rotate: [-62, -72, -62] }; fART = loop(0.5); head = { rotate: 8 }
+  } else if (mode === 'think') {
+    uAR = { rotate: -42 }; fAR = { rotate: -95 }; head = { rotate: -6 }
+  } else if (mode === 'scratch') {
+    uAR = { rotate: -150 }; fAR = { rotate: [-34, -52, -34] }; fART = loop(0.4); head = { rotate: -4 }
+  } else if (mode === 'wave') {
+    uAR = { rotate: -150 }; fAR = { rotate: [-12, 22, -12] }; fART = loop(0.5)
+  } else { // idle / search
+    uAL = { rotate: [0, 3, 0] }; uALT = loop(3.2)
+    uAR = { rotate: [0, -3, 0] }; uART = loop(3.2)
+    if (mode === 'search') { uAR = { rotate: -34 }; fAR = { rotate: -34 }; head = { rotate: [-9, 9, -9] }; headT = loop(1.6) }
+  }
 
-  const head = reduced ? { rotate: 0 } : mode === 'think' ? { rotate: -7 } : mode === 'search' ? { rotate: [-9, 9, -9] } : { rotate: 0 }
-  const headT = mode === 'search' ? REPEAT(1.6) : { duration: 0.4 }
-
-  const bob = reduced ? { y: 0 } : walking ? { y: [0, -2, 0] } : { y: [0, -1.5, 0] }
-  const bobT = walking ? REPEAT(0.6) : REPEAT(2.8)
-
+  const bob = reduced ? { y: 0 } : walking ? { y: [0, -2, 0] } : { y: [0, -1.2, 0] }
+  const bobT = walking ? loop(0.6) : loop(2.8)
   const blink = reduced ? undefined : { scaleY: [1, 1, 0.1, 1] }
   const blinkT = reduced ? undefined : { duration: 0.32, times: [0, 0.85, 0.92, 1], repeat: Infinity, repeatDelay: 3 }
 
+  const Arm = ({ shoulder, elbow, upper, fore, uT, fT, side, withPen }) => (
+    <motion.g style={{ transformOrigin: `${shoulder[0]}px ${shoulder[1]}px` }} animate={upper} transition={uT}>
+      <rect x={shoulder[0] - 2.75} y={shoulder[1]} width="5.5" height={elbow[1] - shoulder[1]} rx="2.7" fill={VEST} stroke={VEST_D} strokeWidth="0.7" />
+      <motion.g style={{ transformOrigin: `${elbow[0]}px ${elbow[1]}px` }} animate={fore} transition={fT}>
+        <rect x={elbow[0] - 2.75} y={elbow[1]} width="5.5" height="14" rx="2.7" fill={VEST} stroke={VEST_D} strokeWidth="0.7" />
+        <circle cx={elbow[0]} cy={elbow[1] + 16} r="3" fill={SKIN} stroke={SKIN_D} strokeWidth="0.6" />
+        {withPen && <line x1={elbow[0] + 1} y1={elbow[1] + 14} x2={elbow[0] + 4} y2={elbow[1] + 19} stroke="#0b1220" strokeWidth="1.6" strokeLinecap="round" />}
+      </motion.g>
+    </motion.g>
+  )
+
   return (
-    <svg width="64" height="104" viewBox="0 0 56 108" fill="none" aria-hidden="true">
+    <svg width="62" height="116" viewBox="0 0 64 120" fill="none" aria-hidden="true">
       <motion.g animate={bob} transition={bobT}>
         {/* legs */}
-        <motion.g style={{ transformOrigin: '24px 66px' }} animate={legL} transition={legT}>
-          <rect x="21" y="66" width="6.5" height="27" rx="3.2" fill="#1e40af" />
-          <rect x="19.5" y="91" width="10" height="6" rx="3" fill="#0b1220" />
+        <motion.g style={{ transformOrigin: '28px 74px' }} animate={legL} transition={legT}>
+          <rect x="24.5" y="74" width="6.5" height="32" rx="2.4" fill={TROUSER} />
+          <rect x="22.5" y="104" width="11" height="6.5" rx="3" fill={SHOE} />
         </motion.g>
-        <motion.g style={{ transformOrigin: '32px 66px' }} animate={legR} transition={legT}>
-          <rect x="28.5" y="66" width="6.5" height="27" rx="3.2" fill="#1d4ed8" />
-          <rect x="26.5" y="91" width="10" height="6" rx="3" fill="#0b1220" />
+        <motion.g style={{ transformOrigin: '36px 74px' }} animate={legR} transition={legT}>
+          <rect x="33" y="74" width="6.5" height="32" rx="2.4" fill="#172e6b" />
+          <rect x="30.5" y="104" width="11" height="6.5" rx="3" fill={SHOE} />
         </motion.g>
 
-        {/* torso / blue hi-vis vest */}
-        <path d="M15 66v-22a8 8 0 0 1 8-8h10a8 8 0 0 1 8 8v22z" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
-        <path d="M24 36 28 41 32 36z" fill="#1e3a8a" />
-        <rect x="16.5" y="52" width="23" height="2.6" fill="#fde047" />
-        <rect x="22" y="42" width="2.4" height="24" fill="#fde047" />
-        <rect x="31.6" y="42" width="2.4" height="24" fill="#fde047" />
+        {/* torso: shirt + hi-vis vest */}
+        <rect x="22" y="33" width="20" height="42" rx="6" fill="#e7eef8" />
+        <path d="M22 40v-1a6 6 0 0 1 6-6h8a6 6 0 0 1 6 6v1z" fill="#e7eef8" />
+        <path d="M23 41h7l2 5 2-5h7v33a3 3 0 0 1-3 3H26a3 3 0 0 1-3-3z" fill={VEST} stroke={VEST_D} strokeWidth="0.8" />
+        <rect x="25" y="58" width="14" height="2.6" fill={STRIPE} />
+        <rect x="27.5" y="44" width="2.4" height="31" fill={STRIPE} />
+        <rect x="34.1" y="44" width="2.4" height="31" fill={STRIPE} />
+
+        {/* neck */}
+        <rect x="29" y="29" width="6" height="6" fill={SKIN} />
 
         {/* left arm */}
-        <motion.g style={{ transformOrigin: '19px 40px' }} animate={armL} transition={armLT}>
-          <rect x="15.5" y="40" width="5.5" height="22" rx="2.7" fill="#2563eb" stroke="#1e40af" strokeWidth="0.8" />
-          <circle cx="18.2" cy="62" r="3" fill="#1d4ed8" />
-        </motion.g>
+        <Arm shoulder={[24, 39]} elbow={[24, 54]} upper={uAL} fore={fAL} uT={uALT} fT={fALT} side="L" />
 
-        {/* right arm (holds the magnifier) */}
-        <motion.g style={{ transformOrigin: '37px 40px' }} animate={armR} transition={armRT}>
-          <rect x="35" y="40" width="5.5" height="22" rx="2.7" fill="#2563eb" stroke="#1e40af" strokeWidth="0.8" />
-          <circle cx="37.8" cy="62" r="3" fill="#1d4ed8" />
-          <circle cx="37.8" cy="68" r="4" fill="rgba(234,179,8,0.25)" stroke="#eab308" strokeWidth="2" />
-          <path d="M40.6 70.8 44 74" stroke="#eab308" strokeWidth="2.2" strokeLinecap="round" />
-        </motion.g>
+        {/* clipboard while writing */}
+        {mode === 'write' && (
+          <g transform="rotate(-8 33 60)">
+            <rect x="24" y="50" width="19" height="24" rx="2" fill="#c8d2e0" stroke="#94a3b8" strokeWidth="0.8" />
+            <rect x="26" y="53" width="15" height="19" rx="1" fill="#fff" />
+            <rect x="30" y="48.5" width="7" height="3" rx="1" fill="#94a3b8" />
+            <rect x="28" y="57" width="11" height="1.2" rx="0.6" fill="#cbd5e1" />
+            <rect x="28" y="61" width="11" height="1.2" rx="0.6" fill="#cbd5e1" />
+            <rect x="28" y="65" width="8" height="1.2" rx="0.6" fill="#cbd5e1" />
+          </g>
+        )}
 
-        {/* head: antenna, hard hat, visor, eyes */}
-        <motion.g style={{ transformOrigin: '28px 30px' }} animate={head} transition={headT}>
-          <circle cx="28" cy="8" r="1.6" fill="#eab308" />
-          <line x1="28" y1="9.2" x2="28" y2="12.5" stroke="#1e40af" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M16 22a12 10 0 0 1 24 0z" fill="#eab308" />
-          <rect x="14" y="20.6" width="28" height="2.8" rx="1.4" fill="#ca8a04" />
-          <rect x="18" y="22" width="20" height="14" rx="5.5" fill="#2563eb" stroke="#1e40af" strokeWidth="1" />
-          <rect x="21" y="25.5" width="14" height="7" rx="3.5" fill="#0b1220" />
-          <motion.g style={{ transformOrigin: '28px 29px' }} animate={blink} transition={blinkT}>
-            <circle cx="25" cy="29" r="1.9" fill="#60a5fa" />
-            <circle cx="31" cy="29" r="1.9" fill="#eab308" />
+        {/* right arm (pen while writing) */}
+        <Arm shoulder={[40, 39]} elbow={[40, 54]} upper={uAR} fore={fAR} uT={uART} fT={fART} side="R" withPen={mode === 'write'} />
+
+        {/* head */}
+        <motion.g style={{ transformOrigin: '32px 31px' }} animate={head} transition={headT}>
+          <circle cx="23.5" cy="23" r="2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.5" />
+          <circle cx="40.5" cy="23" r="2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.5" />
+          <circle cx="32" cy="22" r="9.2" fill={SKIN} stroke={SKIN_D} strokeWidth="0.6" />
+          {/* hair sideburns */}
+          <path d="M23.5 20c0-3 2-5 4-5l-1 6z" fill="#4a3526" />
+          <path d="M40.5 20c0-3-2-5-4-5l1 6z" fill="#4a3526" />
+          {/* eyes */}
+          <motion.g style={{ transformOrigin: '32px 22px' }} animate={blink} transition={blinkT}>
+            <circle cx="28.6" cy="22" r="1.5" fill="#fff" /><circle cx="29" cy="22.2" r="0.9" fill="#1f2937" />
+            <circle cx="35.4" cy="22" r="1.5" fill="#fff" /><circle cx="35.8" cy="22.2" r="0.9" fill="#1f2937" />
           </motion.g>
+          {/* brows + smile */}
+          <path d="M27 18.6c1-0.6 2.4-0.6 3.4 0" stroke="#4a3526" strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M34 18.6c1-0.6 2.4-0.6 3.4 0" stroke="#4a3526" strokeWidth="0.8" strokeLinecap="round" />
+          <path d="M29 26.5c1.6 1.4 4.4 1.4 6 0" stroke={SKIN_D} strokeWidth="0.9" strokeLinecap="round" fill="none" />
+          {/* hard hat */}
+          <path d="M21 17a11 9.5 0 0 1 22 0z" fill={HAT} />
+          <rect x="19" y="15.6" width="26" height="2.8" rx="1.4" fill={HAT_D} />
+          <rect x="31" y="8.6" width="2" height="7" fill={HAT_D} />
         </motion.g>
 
         {/* thought dots */}
         {mode === 'think' && !reduced && (
-          <motion.g initial={{ opacity: 0 }} animate={{ opacity: [0.2, 1, 0.2] }} transition={REPEAT(1.4)}>
-            <circle cx="42" cy="18" r="1.4" fill="#94a3b8" />
-            <circle cx="46" cy="13" r="2" fill="#94a3b8" />
-            <circle cx="50" cy="8" r="2.6" fill="#94a3b8" />
+          <motion.g initial={{ opacity: 0 }} animate={{ opacity: [0.2, 1, 0.2] }} transition={loop(1.4)}>
+            <circle cx="46" cy="16" r="1.4" fill="#94a3b8" />
+            <circle cx="50" cy="11" r="2" fill="#94a3b8" />
+            <circle cx="54" cy="6" r="2.6" fill="#94a3b8" />
           </motion.g>
         )}
       </motion.g>
@@ -127,7 +176,6 @@ export default function Assistant() {
   const [input, setInput] = useState('')
   const scrollRef = useRef(null)
 
-  // Walking character state
   const [mode, setMode] = useState('idle')
   const [x, setX] = useState(80)
   const [walkDur, setWalkDur] = useState(1.4)
@@ -139,21 +187,19 @@ export default function Assistant() {
   const chips = useMemo(() => suggestedQuestions(location.pathname), [location.pathname])
   const overdue = summary?.overdueActions || 0
   const ctx = { summary, assessments, activity, sites, pathname: location.pathname }
+  const writingPage = location.pathname.includes('/create')
   const homeX = () => Math.max(20, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 96)
 
-  // Paused (docked at corner) when greeting, showing a tip, or reduced motion.
-  const paused = open || !!tip || reduced
-  useEffect(() => { pausedRef.current = paused }, [paused])
+  // Stationary (not wandering) when greeting, tip showing, writing, or reduced.
+  const stationary = open || !!tip || reduced || writingPage
+  useEffect(() => { pausedRef.current = stationary }, [stationary])
 
-  // Wander loop: walk to a random spot, then do an activity, repeat. When paused,
-  // dock to the bottom-right corner beside the tip/panel and face inward.
   useEffect(() => {
-    if (paused) {
-      const hx = homeX()
-      setX(hx); xRef.current = hx; setWalkDur(0.7); setFacing(-1)
-      setMode(open ? 'wave' : 'idle')
-      return undefined
-    }
+    if (open) { const hx = homeX(); setX(hx); xRef.current = hx; setWalkDur(0.7); setFacing(-1); setMode('wave'); return undefined }
+    if (tip) { const hx = homeX(); setX(hx); xRef.current = hx; setWalkDur(0.7); setFacing(-1); setMode('idle'); return undefined }
+    if (writingPage) { setX(46); xRef.current = 46; setWalkDur(0.7); setFacing(1); setMode('write'); return undefined }
+    if (reduced) { const hx = homeX(); setX(hx); xRef.current = hx; setFacing(-1); setMode('idle'); return undefined }
+    // wander
     let alive = true
     let t
     const rand = (a, b) => a + Math.random() * (b - a)
@@ -164,25 +210,22 @@ export default function Assistant() {
       const target = Math.round(rand(20, maxX))
       const dur = Math.min(6, Math.max(1.2, Math.abs(target - from) / 110))
       setFacing(target >= from ? 1 : -1)
-      setWalkDur(dur)
-      setMode('walk')
-      setX(target); xRef.current = target
+      setWalkDur(dur); setMode('walk'); setX(target); xRef.current = target
       t = setTimeout(() => {
         if (!alive || pausedRef.current) return
-        setMode(['idle', 'search', 'think', 'idle', 'wave'][Math.floor(Math.random() * 5)])
+        setMode(['idle', 'search', 'think', 'scratch', 'wave'][Math.floor(Math.random() * 5)])
         t = setTimeout(step, rand(3200, 6000))
       }, dur * 1000 + 150)
     }
     t = setTimeout(step, 1400)
     return () => { alive = false; clearTimeout(t) }
-  }, [paused, open])
+  }, [open, tip, writingPage, reduced])
 
-  // Welcome (first ever) or per-page tip (first visit).
   useEffect(() => {
     if (open) return undefined
     const welcomed = ls.get(`hira:guide:welcomed:${uid}`) === '1'
     if (!welcomed) {
-      const t = setTimeout(() => setTip({ welcome: true, title: 'Hi, I’m Scout — your HIRA Guide 👷', text: 'I’ll walk you through the app and answer questions about your risks. Tap me anytime.' }), 1400)
+      const t = setTimeout(() => setTip({ welcome: true, title: 'Hi, I’m Sam — your Safety Guide 👷', text: 'I’ll walk you through the app and answer questions about your risks. Tap me anytime.' }), 1400)
       return () => clearTimeout(t)
     }
     const seenKey = `hira:guide:tip:${uid}:${guide.title}`
@@ -201,8 +244,7 @@ export default function Assistant() {
   const openPanel = () => {
     if (tip?.welcome) ls.set(`hira:guide:welcomed:${uid}`, '1')
     if (tip) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
-    setTip(null)
-    setOpen(true)
+    setTip(null); setOpen(true)
   }
   const ask = (text) => {
     const t = (text || '').trim()
@@ -217,24 +259,20 @@ export default function Assistant() {
   return (
     <div className="no-print">
       {/* Walking character */}
-      <motion.div
-        className="fixed bottom-1 left-0 z-40"
-        animate={{ x }}
-        transition={{ duration: walkDur, ease: 'linear' }}
-      >
-        <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open HIRA Guide">
+      <motion.div className="fixed bottom-1 left-0 z-40" animate={{ x }} transition={{ duration: walkDur, ease: 'linear' }}>
+        <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Safety Guide">
           <div style={{ transform: `scaleX(${facing})` }}>
             <Character mode={open ? 'wave' : mode} reduced={reduced} />
           </div>
           {overdue > 0 && (
-            <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">
+            <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">
               {overdue}
             </span>
           )}
         </button>
       </motion.div>
 
-      {/* Auto tip / welcome bubble (docked bottom-right beside the character) */}
+      {/* Tip / welcome bubble */}
       <AnimatePresence>
         {tip && !open && (
           <motion.div
@@ -242,13 +280,13 @@ export default function Assistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.12 } }}
             transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed bottom-24 right-5 z-40 w-64 rounded-2xl border border-clay-200 bg-clay-surface p-3.5 shadow-card"
+            className="fixed bottom-28 right-5 z-40 w-64 rounded-2xl border border-clay-200 bg-clay-surface p-3.5 shadow-card"
           >
             <button onClick={dismissTip} className="absolute right-2 top-2 rounded-lg p-1 text-ink-400 hover:bg-clay-100"><X size={14} /></button>
             <p className="pr-4 text-sm font-bold text-ink-900">{tip.title}</p>
             <p className="mt-1 text-xs leading-relaxed text-ink-600">{tip.text}</p>
             <button onClick={openPanel} className="btn-soft mt-2.5 px-3 py-1.5 text-xs">
-              <Sparkles size={13} /> {tip.welcome ? 'Show me around' : 'Ask Scout'}
+              <Sparkles size={13} /> {tip.welcome ? 'Show me around' : 'Ask Sam'}
             </button>
           </motion.div>
         )}
@@ -263,12 +301,12 @@ export default function Assistant() {
             exit={{ opacity: 0, y: 12, scale: 0.97, transition: { duration: 0.12 } }}
             transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
             style={{ transformOrigin: 'bottom right' }}
-            className="fixed bottom-28 right-5 z-50 flex max-h-[70vh] w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-clay-200 bg-clay-surface shadow-card"
+            className="fixed bottom-32 right-5 z-50 flex max-h-[68vh] w-[360px] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-clay-200 bg-clay-surface shadow-card"
           >
             <div className="flex items-center gap-2.5 border-b border-clay-200 bg-brand-600 px-4 py-3 text-white">
               <span className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-white/15"><Character mode="idle" reduced /></span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold">Scout — HIRA Guide</p>
+                <p className="text-sm font-bold">Sam — Safety Guide</p>
                 <p className="text-[11px] text-white/70">Insights from your live data</p>
               </div>
               <button onClick={() => setOpen(false)} className="rounded-lg p-1.5 text-white/80 hover:bg-white/15"><X size={16} /></button>
