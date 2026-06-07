@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } fr
 import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { pageGuide, suggestedQuestions, answer } from '../lib/assistant'
+import { pageGuide, suggestedQuestions, answer, askAI, buildAIContext } from '../lib/assistant'
 
 // 3D character is heavy (three.js) — load it only when needed. The auto wrapper
 // uses a realistic rigged .glb if one is present, else the procedural figure.
@@ -178,6 +178,7 @@ export default function Assistant() {
   const [tip, setTip] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const [asking, setAsking] = useState(false)
   const scrollRef = useRef(null)
 
   const [mode, setMode] = useState('idle')
@@ -281,11 +282,29 @@ export default function Assistant() {
   const disableGuide = () => { setOpen(false); setEnabled(false); ls.set(`hira:guide:enabled:${uid}`, '0') }
   const enableGuide = () => { setEnabled(true); ls.set(`hira:guide:enabled:${uid}`, '1') }
 
-  const ask = (text) => {
+  // Hybrid: instant rule answer if it matched; otherwise fall back to the AI.
+  const ask = async (text) => {
     const t = (text || '').trim()
-    if (!t) return
-    setMessages((m) => [...m, { from: 'user', text: t }, { from: 'guide', text: answer(t, ctx) }])
+    if (!t || asking) return
     setInput('')
+    const rule = answer(t, ctx) // { text, matched }
+    if (rule.matched) {
+      setMessages((m) => [...m, { from: 'user', text: t }, { from: 'guide', text: rule.text }])
+      return
+    }
+    // Rules missed → show a thinking bubble and try the AI fallback.
+    setMessages((m) => [...m, { from: 'user', text: t }, { from: 'guide', text: '…', thinking: true }])
+    setAsking(true); lastRef.current = Date.now(); setAsleep(false)
+    let reply = null
+    try { reply = await askAI(t, buildAIContext(ctx)) } catch { reply = null }
+    setAsking(false)
+    setMessages((m) => {
+      const copy = m.slice()
+      for (let i = copy.length - 1; i >= 0; i--) {
+        if (copy[i].thinking) { copy[i] = { from: 'guide', text: reply || rule.text }; break }
+      }
+      return copy
+    })
   }
   useEffect(() => { if (open && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight }, [messages, open])
 
@@ -298,7 +317,7 @@ export default function Assistant() {
     )
   }
 
-  const shownMode = open ? 'wave' : asleep ? 'sleep' : mode
+  const shownMode = asking ? 'think' : open ? 'wave' : asleep ? 'sleep' : mode
 
   return (
     <div className="no-print">
@@ -313,17 +332,19 @@ export default function Assistant() {
         onDragEnd={onDragEnd}
       >
         <button onClick={() => (open ? setOpen(false) : openPanel())} className="relative block" aria-label="Open Safety Guide">
-          <div style={{ transform: `scaleX(${facing})` }}>
-            {reduced ? (
+          {reduced ? (
+            // 2D drawing: flip horizontally to face the walking direction.
+            <div style={{ transform: `scaleX(${facing})` }}>
               <Character mode={shownMode} reduced />
-            ) : (
-              <AvatarBoundary fallback={<Character mode={shownMode} reduced={reduced} />}>
-                <Suspense fallback={<Character mode={shownMode} reduced={reduced} />}>
-                  <Character3D mode={shownMode} size={68} />
-                </Suspense>
-              </AvatarBoundary>
-            )}
-          </div>
+            </div>
+          ) : (
+            // 3D model: it turns itself toward `facing` — never mirror the canvas.
+            <AvatarBoundary fallback={<div style={{ transform: `scaleX(${facing})` }}><Character mode={shownMode} reduced={reduced} /></div>}>
+              <Suspense fallback={<div style={{ transform: `scaleX(${facing})` }}><Character mode={shownMode} reduced={reduced} /></div>}>
+                <Character3D mode={shownMode} size={68} facing={facing} />
+              </Suspense>
+            </AvatarBoundary>
+          )}
           {overdue > 0 && (
             <span className="absolute right-0 top-2 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-extrabold text-white ring-2 ring-white">{overdue}</span>
           )}
@@ -382,8 +403,8 @@ export default function Assistant() {
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); ask(input) }} className="flex items-center gap-2 px-3 pt-3">
-              <input className="input py-2" placeholder="Ask about your risks…" value={input} onChange={(e) => setInput(e.target.value)} />
-              <button type="submit" className="btn-primary px-3 py-2" disabled={!input.trim()}><Send size={16} /></button>
+              <input className="input py-2" placeholder={asking ? 'Thinking…' : 'Ask about your risks…'} value={input} onChange={(e) => setInput(e.target.value)} disabled={asking} />
+              <button type="submit" className="btn-primary px-3 py-2" disabled={!input.trim() || asking}><Send size={16} /></button>
             </form>
 
             {/* Controls: roam/pin + hide */}

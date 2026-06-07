@@ -13,9 +13,11 @@ const TIE = '#e23b34', TIE_D = '#b8251f'
 const TROUSER = '#2b3140', TROUSER_D = '#222734', SHOE = '#171b24'
 const PAPER = '#eef2f7', PAPER_D = '#cdd6e2', MOUTH = '#7a241f', EYE = '#1f2937'
 
-function Rig({ mode = 'idle' }) {
+function Rig({ mode = 'idle', facing = 1 }) {
   const modeRef = useRef(mode)
+  const facingRef = useRef(facing)
   useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { facingRef.current = facing }, [facing])
 
   const root = useRef()
   const torso = useRef()
@@ -69,7 +71,9 @@ function Rig({ mode = 'idle' }) {
     if (pen.current) pen.current.visible = m === 'write'
     if (eyes.current) eyes.current.scale.y = m === 'sleep' ? 0.1 : (t % 4 < 0.13 ? 0.1 : 1)
     if (root.current) {
-      const turn = (m === 'idle' || m === 'sleep') ? Math.sin(t * 0.5) * 0.14 : 0
+      // Turn the actual model toward the walking direction (no mirror flip);
+      // face the viewer when not walking.
+      const turn = m === 'walk' ? facingRef.current * 0.5 : 0
       root.current.rotation.y += (turn - root.current.rotation.y) * k
     }
   })
@@ -154,7 +158,7 @@ function Rig({ mode = 'idle' }) {
   )
 }
 
-export default function Character3D({ mode = 'idle', size = 68 }) {
+export default function Character3D({ mode = 'idle', size = 68, facing = 1 }) {
   const w = size
   const h = Math.round(size * 1.35)
   return (
@@ -165,7 +169,7 @@ export default function Character3D({ mode = 'idle', size = 68 }) {
         <directionalLight position={[-3, 2, -2]} intensity={0.3} />
         {/* centre the figure (feet at 0, top of hat ≈ 2.86) vertically in frame */}
         <group position={[0, -1.43, 0]}>
-          <Rig mode={mode} />
+          <Rig mode={mode} facing={facing} />
         </group>
       </Canvas>
     </div>

@@ -133,6 +133,11 @@ const isHC = (risk) => risk?.key === 'high' || risk?.key === 'critical'
 const worstResidual = (rows) =>
   rows.reduce((m, r) => (r.residual && (!m || (r.residual.score || 0) > (m.score || 0)) ? r.residual : m), null)
 
+// answer() result wrappers: matched=true means a rule handled it; matched=false
+// signals the caller (Assistant) to try the AI fallback.
+const hit = (text) => ({ text, matched: true })
+const miss = (text) => ({ text, matched: false })
+
 // ── Answering ────────────────────────────────────────────────────────────────
 /**
  * Answer a free-typed question from the live data context.
@@ -145,7 +150,7 @@ const worstResidual = (rows) =>
 export function answer(question, ctx) {
   const { summary, assessments = [], activity = [], sites = [], pathname } = ctx || {}
   const qn = norm(question)
-  if (!qn) return 'Ask me anything about your risks — try “give me a summary” or “what’s overdue?”.'
+  if (!qn) return hit('Ask me anything about your risks — try “give me a summary” or “what’s overdue?”.')
   const tokens = new Set(qn.split(' '))
 
   const hazards = flattenHazards(assessments)
@@ -170,15 +175,15 @@ export function answer(question, ctx) {
     const w = worstResidual(rows)
     const open = actions.filter((r) => r.assessmentId === asmtHit.id && isOpen(r.control)).length
     const where = asmtHit.siteName ? ` at ${asmtHit.siteName}` : ''
-    if (!rows.length) return `“${asmtHit.name}”${where} has no hazards recorded yet.`
-    return `“${asmtHit.name}”${where}: ${rows.length} hazard(s), worst residual risk ${w?.label || '—'}, ${open} open action(s). e.g. ${list(rows.map((r) => hzLabel(r.hazard)))}.`
+    if (!rows.length) return hit(`“${asmtHit.name}”${where} has no hazards recorded yet.`)
+    return hit(`“${asmtHit.name}”${where}: ${rows.length} hazard(s), worst residual risk ${w?.label || '—'}, ${open} open action(s). e.g. ${list(rows.map((r) => hzLabel(r.hazard)))}.`)
   }
   if (siteHit) {
     const rows = hazards.filter((r) => norm(r.siteName) === norm(siteHit))
     const hc = rows.filter((r) => isHC(r.residual)).length
     const open = actions.filter((r) => norm(r.siteName) === norm(siteHit) && isOpen(r.control)).length
-    if (!rows.length) return `No hazards recorded for ${siteHit} yet.`
-    return `${siteHit}: ${rows.length} hazard(s)${hc ? `, ${hc} at High/Critical residual risk` : ''}, ${open} open action(s).`
+    if (!rows.length) return hit(`No hazards recorded for ${siteHit} yet.`)
+    return hit(`${siteHit}: ${rows.length} hazard(s)${hc ? `, ${hc} at High/Critical residual risk` : ''}, ${open} open action(s).`)
   }
 
   // ── 2. Scored intent registry ───────────────────────────────────────────────
@@ -242,7 +247,7 @@ export function answer(question, ctx) {
       run: () => `Residual: ${lists.nonAcceptableResidual.length} non-acceptable. Initial: ${lists.nonAcceptableInitial.length} non-acceptable. (Non-acceptable = risk score ≥ 7.) ${lists.actionRequired.length} need action (non-acceptable residual, not yet ALARP).`,
     },
     {
-      keywords: ['action required', 'need action', 'needs action', 'require action'],
+      keywords: ['action required', 'need action', 'needs action', 'require action', 'problem', 'issue', 'concern', 'danger', 'unsafe', 'not safe', 'wrong', 'worry', 'worried'],
       run: () => lists.actionRequired.length
         ? `${lists.actionRequired.length} hazard(s) need action — non-acceptable residual risk and not yet ALARP. See the Action Required tab in the Risk Register.`
         : 'Nothing needs action — all residual risks are acceptable or ALARP-accepted.',
@@ -273,7 +278,7 @@ export function answer(question, ctx) {
       },
     },
     {
-      keywords: ['how many assessment', 'assessments', 'total assessment', 'number of assessment'],
+      keywords: ['how many assessment', 'assessments', 'total assessment', 'number of assessment', 'show all', 'list all', 'everything', 'show me everything'],
       run: () => `${summary?.totalAssessments || 0} risk assessment(s) with ${summary?.totalHazards || 0} hazard(s) in total.`,
     },
     {
@@ -286,7 +291,7 @@ export function answer(question, ctx) {
     },
     {
       // overall summary / status
-      keywords: ['summary', 'overview', 'overall', 'status', 'how are we', 'how is it', 'snapshot', 'brief', 'situation', 'dashboard', 'where do we stand', 'state of'],
+      keywords: ['summary', 'overview', 'overall', 'status', 'how are we', 'how is it', 'snapshot', 'brief', 'situation', 'dashboard', 'where do we stand', 'state of', 'risk', 'risks', 'risky', 'how bad', 'is it safe', 'safe', 'how safe'],
       run: () => `Snapshot: ${summary?.totalAssessments || 0} assessment(s), ${summary?.totalHazards || 0} hazard(s) — ${summary?.highCritical || 0} High/Critical, ${lists.alarp.length} ALARP-accepted, ${summary?.permissible || 0} under permissible risk. Actions: ${summary?.openActions || 0} open, ${summary?.overdueActions || 0} overdue. ${lists.actionRequired.length} risk(s) still need action.`,
     },
     {
@@ -304,9 +309,82 @@ export function answer(question, ctx) {
     for (const k of intent.tokenKeywords || []) if (tokens.has(k)) s++
     if (s > bestScore) { bestScore = s; best = intent }
   }
-  if (best && bestScore > 0) return best.run()
+  if (best && bestScore > 0) return hit(best.run())
 
-  // ── 3. Helpful fallback ─────────────────────────────────────────────────────
+  // ── 3. Unmatched → let the caller try the AI; carry a helpful rule fallback ──
   const qs = suggestedQuestions(pathname)
-  return `I’m not certain what you mean. I can tell you about: overdue & open actions, critical/high risks, ALARP, acceptable vs non-acceptable, sites, activities, totals, recent activity — or “tell me about <an assessment>”. Try: “${qs.slice(0, 3).join('”, “')}”.`
+  return miss(`I’m not certain what you mean. I can tell you about: overdue & open actions, critical/high risks, ALARP, acceptable vs non-acceptable, sites, activities, totals, recent activity — or “tell me about <an assessment>”. Try: “${qs.slice(0, 3).join('”, “')}”.`)
+}
+
+/** Convenience for any caller that just wants the answer string. */
+export function answerText(question, ctx) {
+  return answer(question, ctx).text
+}
+
+// ── AI fallback ───────────────────────────────────────────────────────────────
+/**
+ * Compact, data-only snapshot for the LLM. Only includes the same aggregate
+ * figures already visible in the app (no raw control text / member PII).
+ */
+export function buildAIContext(ctx) {
+  const { summary, assessments = [], activity = [], sites = [] } = ctx || {}
+  const lists = riskLists(assessments)
+  const actions = flattenAdditionalControls(assessments)
+  const sitesByHazards = siteBreakdown(assessments).slice(0, 8).map(([site, hazards]) => ({ site, hazards }))
+  const topActivities = Object.entries(summary?.byActivity || {})
+    .sort((a, b) => b[1] - a[1]).slice(0, 8).map(([activity, hazards]) => ({ activity, hazards }))
+  const recentActivity = activity.slice(0, 8).map((e) => ({ who: e.actorName, did: e.message, when: timeAgo(e.at) }))
+  const assessmentList = assessments.slice(0, 40).map((a) => {
+    const rows = flattenHazards([a])
+    return {
+      name: a.name || 'Untitled',
+      site: a.siteName || '',
+      location: a.location || '',
+      hazards: rows.length,
+      worstResidual: worstResidual(rows)?.label || null,
+    }
+  })
+  return {
+    totals: {
+      assessments: summary?.totalAssessments || 0,
+      hazards: summary?.totalHazards || 0,
+      controls: summary?.totalControls || 0,
+      underPermissibleRisk: summary?.permissible || 0,
+      highOrCritical: summary?.highCritical || 0,
+    },
+    risk: {
+      alarpAccepted: lists.alarp.length,
+      high: lists.high.length,
+      critical: lists.critical.length,
+      acceptableResidual: lists.acceptableResidual.length,
+      nonAcceptableResidual: lists.nonAcceptableResidual.length,
+      needsAction: lists.actionRequired.length,
+    },
+    actions: { total: actions.length, open: summary?.openActions || 0, overdue: summary?.overdueActions || 0 },
+    sites,
+    sitesByHazards,
+    topActivities,
+    recentActivity,
+    assessments: assessmentList,
+  }
+}
+
+/**
+ * Ask the server-side AI proxy. Returns the answer string, or null on any
+ * failure / when the key isn't configured (caller then uses the rule fallback).
+ */
+export async function askAI(question, context) {
+  try {
+    const r = await fetch('/api/assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, context }),
+    })
+    if (!r.ok) return null
+    const d = await r.json().catch(() => null)
+    const text = d?.answer ? String(d.answer).trim() : ''
+    return text || null
+  } catch {
+    return null
+  }
 }

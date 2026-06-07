@@ -141,6 +141,31 @@ No 3D assets are bundled (licensing). See
 [`public/character/README.txt`](public/character/README.txt) for the exact Mixamo
 download + manifest steps.
 
+### Guide Q&A (hybrid: offline rules + optional AI)
+
+Ask Sam questions in the chat panel. It answers in two tiers:
+
+1. **Offline rules** (always on, free) — instant answers to known questions about
+   your live data: counts, overdue/open actions, critical/high risks, ALARP,
+   acceptable vs non-acceptable, busiest site, recent activity, per-site and
+   per-assessment lookups.
+2. **AI fallback** (optional) — for free-form questions the rules don't cover, the
+   chat calls the [`api/assistant.js`](api/assistant.js) serverless function, which
+   asks an LLM (Google Gemini by default) using a compact, data-only snapshot of
+   your org's figures.
+
+To enable the AI fallback, set a **server-side** `GEMINI_API_KEY` (free key at
+<https://aistudio.google.com/app/apikey>) in **Vercel → Project → Settings →
+Environment Variables** (Production). Do **not** prefix it with `VITE_` — that would
+expose it in the browser. Locally, run `vercel dev` to exercise the `api/` route;
+plain `npm run dev` skips it and the guide uses rules only.
+
+> **Privacy:** when the AI fallback is enabled, the user's question plus an
+> aggregate snapshot (the same figures shown in-app — totals, risk counts, site/
+> activity breakdowns, recent activity, assessment names) is sent to the LLM
+> provider. No raw control text or member contact details are sent. Leave
+> `GEMINI_API_KEY` unset to keep everything fully offline.
+
 ## Features
 
 - **Login / Sign up / Register organization** — email-password auth, org-scoped data.

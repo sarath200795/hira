@@ -22,7 +22,7 @@ import Character3D from './Character3D'
 const BASE = '/character/'
 
 // Loads the model + drives the right skeletal clip for the current mode.
-function RiggedModel({ mode, manifest }) {
+function RiggedModel({ mode, manifest, facing = 1 }) {
   const group = useRef()
   const { scene, animations } = useGLTF(BASE + manifest.model)
   const { actions, names } = useAnimations(animations, group)
@@ -54,12 +54,11 @@ function RiggedModel({ mode, manifest }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, actions, names])
 
-  // Gentle idle turn so a static idle clip still feels alive.
-  useFrame((state) => {
+  // Turn the model toward the walking direction (no mirror flip); face forward otherwise.
+  useFrame(() => {
     if (!group.current) return
-    const t = state.clock.elapsedTime
-    const target = mode === 'idle' ? Math.sin(t * 0.5) * 0.12 : 0
-    group.current.rotation.y += (target - group.current.rotation.y) * 0.05
+    const target = mode === 'walk' ? facing * 0.5 : 0
+    group.current.rotation.y += (target - group.current.rotation.y) * 0.08
   })
 
   const scale = manifest.scale ?? 1
@@ -76,7 +75,7 @@ class RiggedBoundary extends Component {
   render() { return this.state.failed ? this.props.fallback : this.props.children }
 }
 
-function RiggedCanvas({ mode, size, manifest }) {
+function RiggedCanvas({ mode, size, manifest, facing = 1 }) {
   const w = size
   const h = Math.round(size * 1.35)
   return (
@@ -86,7 +85,7 @@ function RiggedCanvas({ mode, size, manifest }) {
         <directionalLight position={[3, 5, 4]} intensity={1.1} />
         <directionalLight position={[-3, 2, -2]} intensity={0.35} />
         <Suspense fallback={null}>
-          <RiggedModel mode={mode} manifest={manifest} />
+          <RiggedModel mode={mode} manifest={manifest} facing={facing} />
         </Suspense>
         {/* soft ground shadow */}
         <mesh position={[0, (manifest.yOffset ?? -1) + 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -102,7 +101,7 @@ function RiggedCanvas({ mode, size, manifest }) {
 // renders the realistic character (procedural figure as the load/error
 // fallback); otherwise it renders the procedural figure directly.
 let MANIFEST // undefined = unchecked, null = none, object = found
-export default function Character3DAuto({ mode = 'idle', size = 68 }) {
+export default function Character3DAuto({ mode = 'idle', size = 68, facing = 1 }) {
   const [manifest, setManifest] = useState(MANIFEST)
 
   useEffect(() => {
@@ -121,12 +120,12 @@ export default function Character3DAuto({ mode = 'idle', size = 68 }) {
 
   if (manifest && manifest.model) {
     return (
-      <RiggedBoundary fallback={<Character3D mode={mode} size={size} />}>
-        <Suspense fallback={<Character3D mode={mode} size={size} />}>
-          <RiggedCanvas mode={mode} size={size} manifest={manifest} />
+      <RiggedBoundary fallback={<Character3D mode={mode} size={size} facing={facing} />}>
+        <Suspense fallback={<Character3D mode={mode} size={size} facing={facing} />}>
+          <RiggedCanvas mode={mode} size={size} manifest={manifest} facing={facing} />
         </Suspense>
       </RiggedBoundary>
     )
   }
-  return <Character3D mode={mode} size={size} />
+  return <Character3D mode={mode} size={size} facing={facing} />
 }
