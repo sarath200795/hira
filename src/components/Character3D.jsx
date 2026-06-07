@@ -25,7 +25,7 @@ function Rig({ mode = 'idle', facing = 1 }) {
   const eyes = useRef()
   const sL = useRef(), eL = useRef(), sR = useRef(), eR = useRef()
   const hL = useRef(), hR = useRef()
-  const roll = useRef(), clip = useRef(), pen = useRef()
+  const roll = useRef(), clip = useRef(), pen = useRef(), baton = useRef(), glow = useRef()
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime
@@ -69,6 +69,8 @@ function Rig({ mode = 'idle', facing = 1 }) {
     if (roll.current) roll.current.visible = m !== 'write'
     if (clip.current) clip.current.visible = m === 'write'
     if (pen.current) pen.current.visible = m === 'write'
+    if (baton.current) baton.current.visible = m !== 'write'
+    if (glow.current && glow.current.material) glow.current.material.emissiveIntensity = 0.55 + Math.sin(t * 6) * 0.4
     if (eyes.current) eyes.current.scale.y = m === 'sleep' ? 0.1 : (t % 4 < 0.13 ? 0.1 : 1)
     if (root.current) {
       // Turn the actual model toward the walking direction (no mirror flip);
@@ -128,6 +130,16 @@ function Rig({ mode = 'idle', facing = 1 }) {
           <mesh position={[0, -0.2, 0]}><boxGeometry args={[0.16, 0.42, 0.16]} /><meshStandardMaterial color={SLEEVE_D} /></mesh>
           <mesh position={[0, -0.42, 0]}><sphereGeometry args={[0.11, 16, 16]} /><meshStandardMaterial color={SKIN} /></mesh>
           <mesh ref={pen} position={[0.03, -0.5, 0.06]} rotation={[0.5, 0, 0]}><boxGeometry args={[0.025, 0.18, 0.025]} /><meshStandardMaterial color="#0b1220" /></mesh>
+          {/* reflective red light baton (traffic wand) held in the hand */}
+          <group ref={baton} position={[0.04, -0.46, 0.1]} rotation={[0.18, 0, 0]}>
+            {/* handle */}
+            <mesh position={[0, 0.04, 0]}><cylinderGeometry args={[0.038, 0.038, 0.16, 14]} /><meshStandardMaterial color="#15181f" /></mesh>
+            <mesh position={[0, 0.13, 0]}><torusGeometry args={[0.04, 0.012, 8, 16]} /><meshStandardMaterial color="#f4c20d" /></mesh>
+            {/* glowing translucent red cone/tube */}
+            <mesh ref={glow} position={[0, -0.34, 0]}><cylinderGeometry args={[0.055, 0.05, 0.6, 18]} /><meshStandardMaterial color="#ff2a2a" emissive="#ff1414" emissiveIntensity={0.8} transparent opacity={0.82} /></mesh>
+            {/* bright tip */}
+            <mesh position={[0, -0.66, 0]}><sphereGeometry args={[0.06, 14, 14]} /><meshStandardMaterial color="#ff6a6a" emissive="#ff2a2a" emissiveIntensity={1.1} /></mesh>
+          </group>
         </group>
       </group>
 
