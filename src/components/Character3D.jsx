@@ -7,9 +7,9 @@ import { Canvas, useFrame } from '@react-three/fiber'
 // proportions to read clearly at small sizes; camera framed so the whole figure
 // (head included) is always visible.
 const SKIN = '#f3c9a3', SKIN_D = '#e0ad82'
-const HAT = '#1f9e4d', HAT_D = '#15803d'            // green safety-officer hard hat
+const HAT = '#f4c20d', HAT_D = '#d4a200'            // yellow hard hat
 const SHIRT = '#ffffff', SLEEVE_D = '#e8edf3'        // white shirt sleeves under the vest
-const VEST = '#2fbf5f', VEST_D = '#1ea34d', STRIPE = '#e2e8f0' // green hi-vis vest + reflective stripes
+const VEST = '#f97316', VEST_D = '#c2410c', STRIPE = '#e2e8f0' // orange hi-vis vest + reflective stripes
 const TIE = '#e23b34', TIE_D = '#b8251f'
 const TROUSER = '#2b3140', TROUSER_D = '#222734', SHOE = '#171b24'
 const PAPER = '#eef2f7', PAPER_D = '#cdd6e2', MOUTH = '#7a241f', EYE = '#1f2937'

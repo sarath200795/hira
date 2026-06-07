@@ -248,24 +248,30 @@ export default function Assistant() {
     return () => { alive = false; clearTimeout(t); if (anim?.stop) anim.stop() }
   }, [enabled, asleep, open, tip, writingPage, reduced, pinned, mx, my])
 
-  // Welcome / per-page tip.
+  // Login greeting (once per browser session) → then per-page tips.
   useEffect(() => {
     if (!enabled || open) return undefined
-    const welcomed = ls.get(`hira:guide:welcomed:${uid}`) === '1'
-    if (!welcomed) { const t = setTimeout(() => setTip({ welcome: true, title: 'Hi, I’m Sam — your Safety Guide 👷', text: 'Drag me anywhere, ask me about your risks, or hide me from the menu in my chat. Tap me to start.' }), 1400); return () => clearTimeout(t) }
+    const greetKey = `hira:guide:greeted:${uid}`
+    const greeted = (() => { try { return sessionStorage.getItem(greetKey) === '1' } catch { return false } })()
+    if (!greeted) {
+      const t = setTimeout(() => {
+        setTip({ greeting: true, title: 'HI! Here to Help you', text: 'Tap me anytime to ask about your risks, actions and assessments.' })
+        try { sessionStorage.setItem(greetKey, '1') } catch { /* ignore */ }
+      }, 1200)
+      const t2 = setTimeout(() => setTip((cur) => (cur?.greeting ? null : cur)), 8000) // auto-dismiss greeting
+      return () => { clearTimeout(t); clearTimeout(t2) }
+    }
     const seenKey = `hira:guide:tip:${uid}:${guide.title}`
     if (ls.get(seenKey) !== '1') { const t = setTimeout(() => setTip({ title: guide.title, text: guide.tips[0] }), 900); return () => clearTimeout(t) }
     return undefined
   }, [location.pathname, open, uid, guide, enabled])
 
   const dismissTip = () => {
-    if (tip?.welcome) ls.set(`hira:guide:welcomed:${uid}`, '1')
-    else if (tip) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
+    if (tip && !tip.greeting) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
     setTip(null)
   }
   const openPanel = () => {
-    if (tip?.welcome) ls.set(`hira:guide:welcomed:${uid}`, '1')
-    if (tip) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
+    if (tip && !tip.greeting) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
     setTip(null); setOpen(true); lastRef.current = Date.now(); setAsleep(false)
   }
   const onDragEnd = () => {
