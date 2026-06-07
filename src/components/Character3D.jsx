@@ -7,8 +7,9 @@ import { Canvas, useFrame } from '@react-three/fiber'
 // proportions to read clearly at small sizes; camera framed so the whole figure
 // (head included) is always visible.
 const SKIN = '#f3c9a3', SKIN_D = '#e0ad82'
-const HAT = '#f4c20d', HAT_D = '#d4a200'
-const SHIRT = '#ffffff', SLEEVE_D = '#e8edf3'
+const HAT = '#1f9e4d', HAT_D = '#15803d'            // green safety-officer hard hat
+const SHIRT = '#ffffff', SLEEVE_D = '#e8edf3'        // white shirt sleeves under the vest
+const VEST = '#2fbf5f', VEST_D = '#1ea34d', STRIPE = '#e2e8f0' // green hi-vis vest + reflective stripes
 const TIE = '#e23b34', TIE_D = '#b8251f'
 const TROUSER = '#2b3140', TROUSER_D = '#222734', SHOE = '#171b24'
 const PAPER = '#eef2f7', PAPER_D = '#cdd6e2', MOUTH = '#7a241f', EYE = '#1f2937'
@@ -93,14 +94,20 @@ function Rig({ mode = 'idle', facing = 1 }) {
         <mesh position={[0, -0.82, 0.07]}><boxGeometry args={[0.26, 0.16, 0.42]} /><meshStandardMaterial color={SHOE} /></mesh>
       </group>
 
-      {/* torso = white shirt + red tie (pivot near waist for lean) */}
+      {/* torso = green hi-vis safety vest over a white shirt (pivot near waist for lean) */}
       <group ref={torso} position={[0, 1.0, 0]}>
-        <mesh position={[0, 0.32, 0]}><boxGeometry args={[0.86, 0.8, 0.5]} /><meshStandardMaterial color={SHIRT} /></mesh>
-        {/* collar V */}
-        <mesh position={[0, 0.66, 0.255]} rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[0.12, 0.12, 0.02]} /><meshStandardMaterial color={SLEEVE_D} /></mesh>
-        {/* tie: knot + blade */}
-        <mesh position={[0, 0.62, 0.27]}><boxGeometry args={[0.12, 0.12, 0.04]} /><meshStandardMaterial color={TIE_D} /></mesh>
-        <mesh position={[0, 0.36, 0.27]}><boxGeometry args={[0.14, 0.42, 0.03]} /><meshStandardMaterial color={TIE} /></mesh>
+        {/* white shirt body */}
+        <mesh position={[0, 0.32, 0]}><boxGeometry args={[0.84, 0.8, 0.48]} /><meshStandardMaterial color={SHIRT} /></mesh>
+        {/* green hi-vis vest shell (slightly proud of the shirt) */}
+        <mesh position={[0, 0.3, 0.01]}><boxGeometry args={[0.88, 0.74, 0.52]} /><meshStandardMaterial color={VEST} /></mesh>
+        {/* shirt collar */}
+        <mesh position={[0, 0.64, 0.255]} rotation={[0, 0, Math.PI / 4]}><boxGeometry args={[0.12, 0.12, 0.02]} /><meshStandardMaterial color={SLEEVE_D} /></mesh>
+        {/* centre zipper */}
+        <mesh position={[0, 0.3, 0.27]}><boxGeometry args={[0.03, 0.72, 0.02]} /><meshStandardMaterial color="#0b1220" /></mesh>
+        {/* reflective stripes: two vertical + one horizontal */}
+        <mesh position={[-0.23, 0.3, 0.27]}><boxGeometry args={[0.1, 0.72, 0.02]} /><meshStandardMaterial color={STRIPE} /></mesh>
+        <mesh position={[0.23, 0.3, 0.27]}><boxGeometry args={[0.1, 0.72, 0.02]} /><meshStandardMaterial color={STRIPE} /></mesh>
+        <mesh position={[0, 0.16, 0.27]}><boxGeometry args={[0.62, 0.1, 0.02]} /><meshStandardMaterial color={STRIPE} /></mesh>
         {/* clipboard (write mode only) */}
         <group ref={clip} position={[0, 0.2, 0.46]} rotation={[-0.5, 0, 0]}>
           <mesh><boxGeometry args={[0.42, 0.52, 0.03]} /><meshStandardMaterial color={PAPER_D} /></mesh>
