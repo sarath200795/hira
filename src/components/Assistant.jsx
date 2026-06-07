@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, Component } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } from 'framer-motion'
 import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
 import { useRa } from '../context/RaContext'
@@ -168,6 +168,7 @@ function Bubble({ from, children }) {
 
 export default function Assistant() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { summary, assessments, activity, sites } = useRa()
   const { user } = useAuth()
   const reduced = useReducedMotion()
@@ -293,9 +294,13 @@ export default function Assistant() {
     const t = (text || '').trim()
     if (!t || asking) return
     setInput('')
-    const rule = answer(t, ctx) // { text, matched }
+    const rule = answer(t, ctx) // { text, matched, action? }
     if (rule.matched) {
       setMessages((m) => [...m, { from: 'user', text: t }, { from: 'guide', text: rule.text }])
+      // Some answers ask the UI to navigate (create a RA, edit one to add a hazard).
+      if (rule.action?.type === 'navigate' && rule.action.to) {
+        setTimeout(() => { navigate(rule.action.to); setOpen(false) }, 700)
+      }
       return
     }
     // Rules missed → show a thinking bubble and try the AI fallback.

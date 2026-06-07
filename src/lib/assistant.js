@@ -137,6 +137,29 @@ const worstResidual = (rows) =>
 // signals the caller (Assistant) to try the AI fallback.
 const hit = (text) => ({ text, matched: true })
 const miss = (text) => ({ text, matched: false })
+// A matched answer that also asks the UI to navigate somewhere.
+const nav = (text, to) => ({ text, matched: true, action: { type: 'navigate', to } })
+
+const HSE = 'For authoritative guidance, see the UK HSE: https://www.hse.gov.uk/.'
+
+// Concise, correct safety guidance for common risk-assessment / control / hazard
+// questions, always citing the HSE. Returns null if the topic isn't recognised
+// (so the caller can defer to the AI fallback).
+function guidanceAnswer(qn) {
+  if (qn.includes('hierarch') || qn.includes('control measure') || qn.includes('how to control') || qn.includes('what control') || qn.includes('types of control'))
+    return `Use the hierarchy of controls, most to least effective: 1) Elimination, 2) Substitution, 3) Engineering controls, 4) Administrative controls, 5) PPE. Always exhaust higher levels before relying on PPE. ${HSE}`
+  if (qn.includes('ppe'))
+    return `PPE (personal protective equipment) is the LAST line of defence, used only after higher controls. Choose PPE matched to the hazard (eye, hearing, respiratory, hand, foot, fall protection), and ensure correct fit, training and maintenance. ${HSE}`
+  if (qn.includes('coshh') || qn.includes('hazardous substance') || qn.includes('chemical'))
+    return `COSHH covers substances hazardous to health: assess exposure, prevent it where possible or otherwise control it (ventilation, enclosure, PPE), and monitor/health-surveil where needed. ${HSE}`
+  if (qn.includes('alarp'))
+    return `ALARP = “As Low As Reasonably Practicable”: keep reducing a residual risk until the cost/effort of further reduction is grossly disproportionate to the benefit, then formally accept it. ${HSE}`
+  if ((qn.includes('hazard') && (qn.includes('differ') || qn.includes('vs') || qn.includes('versus'))) || qn.includes('what is a hazard') || qn.includes('what is hazard'))
+    return `A hazard is anything with the potential to cause harm (e.g. chemicals, electricity, working at height). Risk is how likely that harm is and how severe it would be. ${HSE}`
+  if (qn.includes('risk assessment') || qn.includes('assess risk') || qn.includes('how do i assess') || qn.includes('what is risk'))
+    return `A risk assessment has 5 steps: 1) identify hazards, 2) decide who might be harmed and how, 3) evaluate the risk and decide controls, 4) record and implement your findings, 5) review and update. In HIRA: create an assessment → add activities → hazards → score Probability × Severity → apply the hierarchy of controls and a projected residual risk. ${HSE}`
+  return null
+}
 
 // ── Answering ────────────────────────────────────────────────────────────────
 /**
@@ -156,6 +179,20 @@ export function answer(question, ctx) {
   const hazards = flattenHazards(assessments)
   const actions = flattenAdditionalControls(assessments)
   const lists = riskLists(assessments)
+
+  // ── 0. Navigation intents (create a RA / add a hazard to an existing one) ────
+  const asmtByName = assessments.find((a) => a.name && norm(a.name).length >= 3 && qn.includes(norm(a.name)))
+  const wantsAddHazard = qn.includes('hazard') && /\b(add|new|log|include|put|record)\b/.test(qn)
+  const wantsCreate = /\b(create|new|start|make|begin|add|do)\b/.test(qn) &&
+    (qn.includes('risk assessment') || qn.includes('assessment') || qn.includes('hira'))
+
+  if (wantsAddHazard) {
+    if (asmtByName) return nav(`Opening “${asmtByName.name}” so you can add a hazard — go to Section 3 (Activities → Hazards) and add it there.`, `/app/create/${asmtByName.id}`)
+    return nav('Which assessment? Opening the Repository — click ✎ Edit on the one you want, then add the hazard under an activity in Section 3. Tip: ask me “add hazard to <assessment name>”.', '/app/repository')
+  }
+  if (wantsCreate) {
+    return nav('Sure — opening the Create Risk Assessment page for you. 👷', '/app/create')
+  }
 
   // ── 1. Entity lookups (mention of a specific site or assessment by name) ─────
   const siteNames = Array.from(new Set([...sites, ...assessments.map((a) => a.siteName)].filter(Boolean)))
@@ -192,6 +229,15 @@ export function answer(question, ctx) {
 
   const INTENTS = [
     {
+      // HSE guidance (general RA / control / hazard knowledge) — must win its topics
+      keywords: ['hierarch', 'control measure', 'how to control', 'what control', 'types of control', 'ppe', 'coshh', 'hazardous substance',
+        'what is alarp', 'what does alarp', 'alarp mean', 'meaning of alarp',
+        'what is a hazard', 'what is hazard', 'hazard vs', 'hazard versus', 'difference between hazard',
+        'what is a risk assessment', 'what is risk assessment', 'how to do a risk assessment', 'how do i do a risk assessment',
+        'steps of risk assessment', 'how do i assess', 'assess risk', 'best practice', 'guidance'],
+      run: () => guidanceAnswer(qn) || `${HSE}`,
+    },
+    {
       // recent activity / audit
       keywords: ['recent', 'history', 'changed', 'lately', 'latest', 'audit', 'who did', 'who changed', 'activity log', ' log'],
       run: () => {
@@ -222,9 +268,16 @@ export function answer(question, ctx) {
       },
     },
     {
-      // open / in-progress actions (CAPA)
-      keywords: ['open action', 'open actions', 'in progress', 'pending', 'outstanding', 'unfinished', 'remaining action', 'capa', 'to do', 'todo'],
-      run: () => `${open().length} open action(s) (Open or In Progress) out of ${actions.length} additional control(s). ${summary?.overdueActions || 0} are overdue.`,
+      // open / in-progress actions (CAPA) — list each with its hazard + assessment
+      keywords: ['open action', 'open actions', 'in progress', 'pending', 'outstanding', 'unfinished', 'remaining action', 'capa', 'to do', 'todo', 'which hazard', 'hazard has', 'hazard with', 'open for'],
+      run: () => {
+        const op = open()
+        if (!op.length) return `No open actions — all ${actions.length} additional control(s) are Implemented (or none have been added yet).`
+        const lines = op.slice(0, 6).map((r) =>
+          `• ${r.control.description || r.control.hierarchy || 'Control'} — for hazard “${r.hazardLabel}” in “${r.assessmentName}”${r.control.dueDate ? ` (due ${r.control.dueDate})` : ''}${isOverdue(r.control) ? ' ⚠ overdue' : ''}`)
+        const extra = op.length - Math.min(op.length, 6)
+        return `${op.length} open action(s) (Open / In Progress)${summary?.overdueActions ? `, ${summary.overdueActions} overdue` : ''}:\n${lines.join('\n')}${extra > 0 ? `\n…and ${extra} more. Open the Action Tracker for all of them.` : ''}`
+      },
     },
     {
       keywords: ['critical', 'severe'],
@@ -313,6 +366,10 @@ export function answer(question, ctx) {
 
   // ── 3. Unmatched → let the caller try the AI; carry a helpful rule fallback ──
   const qs = suggestedQuestions(pathname)
+  const safetyish = /hazard|risk|control|safety|assess|ppe|incident|accident|injur|coshh|hse/.test(qn)
+  if (safetyish) {
+    return miss(`Here’s the gist, with more at the HSE: https://www.hse.gov.uk/. For your own data, ask me about overdue & open actions, critical/high risks, ALARP, sites, or “tell me about <an assessment>”. I can also create a risk assessment or add a hazard for you — just say so.`)
+  }
   return miss(`I’m not certain what you mean. I can tell you about: overdue & open actions, critical/high risks, ALARP, acceptable vs non-acceptable, sites, activities, totals, recent activity — or “tell me about <an assessment>”. Try: “${qs.slice(0, 3).join('”, “')}”.`)
 }
 
