@@ -119,9 +119,11 @@ function Rig({ mode = 'idle' }) {
   )
 }
 
-export default function Character3D({ mode = 'idle' }) {
+export default function Character3D({ mode = 'idle', size = 68 }) {
+  const w = size
+  const h = Math.round(size * 1.35)
   return (
-    <div style={{ width: 124, height: 168, pointerEvents: 'none' }}>
+    <div style={{ width: w, height: h, pointerEvents: 'none' }}>
       <Canvas dpr={[1, 2]} gl={{ alpha: true, antialias: true }} camera={{ position: [0, 0.05, 3.4], fov: 30 }} style={{ background: 'transparent' }}>
         <ambientLight intensity={0.75} />
         <directionalLight position={[3, 5, 4]} intensity={1.1} />

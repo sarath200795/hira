@@ -122,13 +122,24 @@ gh secret set VERCEL_TOKEN
 > Firebase Console → **Authentication → Settings → Authorized domains → Add domain** →
 > `hira-ruddy.vercel.app` (and your Firebase Hosting domain if you use it).
 
-## Guide character (Lottie-ready)
+## Guide character (3D, rigged-model ready)
 
-The on-screen guide ("Sam") is a built-in animated SVG (walks, thinks, scratches
-head, writes on the Create page). To swap in a designer-made character, drop a
-licensed Lottie JSON + `manifest.json` into `public/lottie/` — see
-[`public/lottie/README.txt`](public/lottie/README.txt). No code changes needed;
-it falls back to the built-in Sam when no files are present.
+The on-screen guide ("Sam") is a **3D character** (`three.js` / `@react-three/fiber`)
+that walks, thinks, writes on the Create page, scratches its head, waves, and sleeps
+when idle. It loads lazily, so it never weighs down the initial page.
+
+It renders with a robust **3-tier fallback**:
+
+1. **Realistic rigged `.glb`** — drop a licensed model (e.g. a free Mixamo human) +
+   a `manifest.json` into [`public/character/`](public/character/README.txt) and the
+   photoreal character loads automatically, switching skeletal animation clips per
+   state. No code changes needed.
+2. **Built-in procedural 3D figure** — used when no `.glb` is present (the default).
+3. **2D SVG Sam** — used for `prefers-reduced-motion` users or if WebGL is unavailable.
+
+No 3D assets are bundled (licensing). See
+[`public/character/README.txt`](public/character/README.txt) for the exact Mixamo
+download + manifest steps.
 
 ## Features
 

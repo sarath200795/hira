@@ -6,8 +6,9 @@ import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
 import { pageGuide, suggestedQuestions, answer } from '../lib/assistant'
 
-// 3D character is heavy (three.js) — load it only when needed.
-const Character3D = lazy(() => import('./Character3D'))
+// 3D character is heavy (three.js) — load it only when needed. The auto wrapper
+// uses a realistic rigged .glb if one is present, else the procedural figure.
+const Character3D = lazy(() => import('./Character3DRigged'))
 
 // Falls back to the 2D SVG Sam if WebGL/three fails to load.
 class AvatarBoundary extends Component {
@@ -318,7 +319,7 @@ export default function Assistant() {
             ) : (
               <AvatarBoundary fallback={<Character mode={shownMode} reduced={reduced} />}>
                 <Suspense fallback={<Character mode={shownMode} reduced={reduced} />}>
-                  <Character3D mode={shownMode} />
+                  <Character3D mode={shownMode} size={68} />
                 </Suspense>
               </AvatarBoundary>
             )}

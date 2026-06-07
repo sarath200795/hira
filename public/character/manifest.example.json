@@ -1,0 +1,14 @@
+{
+  "model": "character.glb",
+  "clips": {
+    "walk": "Walking",
+    "idle": "Idle",
+    "think": "Thinking",
+    "write": "Writing",
+    "scratch": "ScratchHead",
+    "wave": "Waving",
+    "sleep": "Sleeping"
+  },
+  "scale": 1,
+  "yOffset": -1
+}
