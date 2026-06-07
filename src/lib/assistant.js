@@ -161,6 +161,23 @@ function guidanceAnswer(qn) {
   return null
 }
 
+// Fuzzy "did you mean" — best name from `names` by shared significant words
+// (+ a bonus for a contained substring). Returns null when nothing is close.
+function closest(qn, names = []) {
+  const qset = new Set(qn.split(' ').filter((w) => w.length > 2))
+  let best = null
+  let bestScore = 0
+  for (const n of names) {
+    if (!n) continue
+    const nt = norm(n).split(' ').filter((w) => w.length > 2)
+    let s = 0
+    for (const w of nt) if (qset.has(w)) s++
+    if (qn.includes(norm(n)) && norm(n).length > 2) s += 3
+    if (s > bestScore) { bestScore = s; best = n }
+  }
+  return bestScore > 0 ? best : null
+}
+
 // ── Answering ────────────────────────────────────────────────────────────────
 /**
  * Answer a free-typed question from the live data context.
@@ -188,7 +205,12 @@ export function answer(question, ctx) {
 
   if (wantsAddHazard) {
     if (asmtByName) return nav(`Opening “${asmtByName.name}” so you can add a hazard — go to Section 3 (Activities → Hazards) and add it there.`, `/app/create/${asmtByName.id}`)
-    return nav('Which assessment? Opening the Repository — click ✎ Edit on the one you want, then add the hazard under an activity in Section 3. Tip: ask me “add hazard to <assessment name>”.', '/app/repository')
+    const names = assessments.map((a) => a.name).filter(Boolean)
+    const guess = closest(qn, names)
+    if (guess) return hit(`I couldn’t find an exact match. Did you mean “${guess}”? If so, say “add hazard to ${guess}” and I’ll open it.`)
+    return hit(names.length
+      ? `Which assessment should I add the hazard to? You have: ${list(names, 5)}. Say “add hazard to <name>”, or “create a risk assessment” to start a new one.`
+      : `You don’t have any assessments yet. Say “create a risk assessment” and I’ll open the form for you.`)
   }
   if (wantsCreate) {
     return nav('Sure — opening the Create Risk Assessment page for you. 👷', '/app/create')
@@ -283,13 +305,13 @@ export function answer(question, ctx) {
       keywords: ['critical', 'severe'],
       run: () => lists.critical.length
         ? `${lists.critical.length} hazard(s) at Critical residual risk: ${list(lists.critical.map((x) => hzLabel(x.hazard)))}.`
-        : 'No hazards at Critical residual risk.',
+        : 'No hazards at Critical residual risk. Want me to check your High risks or what needs action?',
     },
     {
       keywords: ['high risk', 'high risks', 'major', ' high'],
       run: () => lists.high.length
         ? `${lists.high.length} hazard(s) at High residual risk: ${list(lists.high.map((x) => hzLabel(x.hazard)))}.`
-        : 'No hazards at High residual risk.',
+        : 'No hazards at High residual risk. Want your Critical risks or the list of what needs action?',
     },
     {
       keywords: ['alarp', 'tolerable', 'as low as'],
@@ -364,13 +386,33 @@ export function answer(question, ctx) {
   }
   if (best && bestScore > 0) return hit(best.run())
 
-  // ── 3. Unmatched → let the caller try the AI; carry a helpful rule fallback ──
-  const qs = suggestedQuestions(pathname)
+  // ── 3. Nothing matched → ask a clarifying cross-question with a suggestion ───
+  // 3a. Looks like they named an assessment/site we don't have → "did you mean…?"
+  const asmtGuess = closest(qn, assessments.map((a) => a.name).filter(Boolean))
+  if (asmtGuess && /assessment|hazard|risk|about|detail|show|tell|open|action/.test(qn))
+    return hit(`I couldn’t find that exactly. Did you mean the assessment “${asmtGuess}”? Try “tell me about ${asmtGuess}”, or “add hazard to ${asmtGuess}”.`)
+  const siteGuess = closest(qn, sites)
+  if (siteGuess && /site|location|where|plant|facility|area/.test(qn))
+    return hit(`Did you mean the site “${siteGuess}”? Try “risks at ${siteGuess}”.`)
+
+  // 3b. Topic is clear but the question is vague → ask which angle they want.
+  if (/action|capa|task|to do/.test(qn))
+    return hit('Did you mean overdue actions, open actions, or which hazard has an open action? Ask one and I’ll pull it up.')
+  if (/site|location|plant|facility|area/.test(qn))
+    return hit(sites.length
+      ? `Which site? You have: ${list(sites, 5)}. Try “risks at <site>” or “which site has the most hazards”.`
+      : 'No sites are set up yet — add them under Organization, then ask “which site has the most hazards”.')
+  if (/assessment|hira/.test(qn))
+    return hit('Did you want to create a risk assessment, add a hazard to an existing one, or hear about a specific assessment? Tell me which.')
+
+  // 3c. Safety/guidance wording → try the AI; the no-AI fallback still cites HSE.
   const safetyish = /hazard|risk|control|safety|assess|ppe|incident|accident|injur|coshh|hse/.test(qn)
-  if (safetyish) {
-    return miss(`Here’s the gist, with more at the HSE: https://www.hse.gov.uk/. For your own data, ask me about overdue & open actions, critical/high risks, ALARP, sites, or “tell me about <an assessment>”. I can also create a risk assessment or add a hazard for you — just say so.`)
-  }
-  return miss(`I’m not certain what you mean. I can tell you about: overdue & open actions, critical/high risks, ALARP, acceptable vs non-acceptable, sites, activities, totals, recent activity — or “tell me about <an assessment>”. Try: “${qs.slice(0, 3).join('”, “')}”.`)
+  if (safetyish)
+    return miss(`Could you be a bit more specific? You can ask about your overdue/open actions, critical/high risks, ALARP, or a specific assessment — or for general guidance see the HSE: https://www.hse.gov.uk/.`)
+
+  // 3d. No idea → offer concrete options as a question.
+  const qs = suggestedQuestions(pathname)
+  return miss(`I’m not sure I follow — did you want a summary, your overdue/open actions, critical/high risks, or “tell me about <an assessment>”? You could also say “create a risk assessment”. Try: “${qs.slice(0, 3).join('”, “')}”.`)
 }
 
 /** Convenience for any caller that just wants the answer string. */
