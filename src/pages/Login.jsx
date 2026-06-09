@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AuthShell from '../components/AuthShell'
@@ -20,7 +20,7 @@ export default function Login() {
     try {
       await login(form)
       toast.success('Welcome back!')
-      navigate(location.state?.from?.pathname || '/app/dashboard', { replace: true })
+      navigate('/app/dashboard', { replace: true })
     } catch (err) {
       toast.error(authErrorMessage(err))
     } finally {
