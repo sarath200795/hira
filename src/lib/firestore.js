@@ -93,14 +93,21 @@ export async function getUserProfile(uid) {
   return snap.exists() ? { uid, ...snap.data() } : null
 }
 
-export function subscribeOrgUsers(orgId, cb) {
+// Default snapshot error handler: log a warning instead of letting Firestore
+// raise an "Uncaught Error in snapshot listener" that can hang/blank the UI.
+const onSnapErr = (label) => (err) => {
+  // eslint-disable-next-line no-console
+  console.warn(`[HIRA] ${label} listener error:`, err?.code || err?.message || err)
+}
+
+export function subscribeOrgUsers(orgId, cb, onError) {
   const q = query(collection(db, 'users'), where('orgId', '==', orgId))
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))))
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ uid: d.id, ...d.data() }))), onError || onSnapErr('org users'))
 }
 
 /** Live org document (name, address, sites, …). */
-export function subscribeOrg(orgId, cb) {
-  return onSnapshot(orgRef(orgId), (snap) => cb(snap.exists() ? { id: snap.id, ...snap.data() } : null))
+export function subscribeOrg(orgId, cb, onError) {
+  return onSnapshot(orgRef(orgId), (snap) => cb(snap.exists() ? { id: snap.id, ...snap.data() } : null), onError || onSnapErr('org'))
 }
 
 /** Replace the org's list of sites/facilities. */
@@ -127,18 +134,18 @@ export function logActivity(orgId, actor, { type, message, assessmentId = null }
   })
 }
 
-export function subscribeActivity(orgId, cb, max = 50) {
+export function subscribeActivity(orgId, cb, onError, max = 50) {
   const q = query(activityCol(orgId), orderBy('at', 'desc'), limit(max))
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError || onSnapErr('activity'))
 }
 
 // ── Risk assessments ──────────────────────────────────────────────────────────
 
 const ASSESSMENT_LOAD_CAP = 1000
 
-export function subscribeAssessments(orgId, cb, max = ASSESSMENT_LOAD_CAP) {
+export function subscribeAssessments(orgId, cb, onError, max = ASSESSMENT_LOAD_CAP) {
   const q = query(assessmentCol(orgId), orderBy('createdAt', 'desc'), limit(max))
-  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))))
+  return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError || onSnapErr('assessments'))
 }
 
 export async function getAssessment(orgId, id) {

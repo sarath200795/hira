@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useAuth } from './AuthContext'
 import { subscribeAssessments, subscribeOrg, subscribeActivity } from '../lib/firestore'
 import { summarize } from '../lib/raStats'
@@ -16,12 +17,26 @@ export function RaProvider({ children }) {
   useEffect(() => {
     if (!orgId) return
     setLoading(true)
+    // If a listener is denied/fails, stop loading so the UI shows an empty state
+    // (with a one-time toast) instead of a perpetual spinner or blank screen.
+    let warned = false
+    const onErr = (err) => {
+      setLoading(false)
+      if (!warned) {
+        warned = true
+        toast.error(
+          err?.code === 'permission-denied'
+            ? "You don't have access to this organization's data."
+            : 'Could not load live data. Check your connection.'
+        )
+      }
+    }
     const u1 = subscribeAssessments(orgId, (list) => {
       setAssessments(list)
       setLoading(false)
-    })
-    const u2 = subscribeOrg(orgId, setOrg)
-    const u3 = subscribeActivity(orgId, setActivity)
+    }, onErr)
+    const u2 = subscribeOrg(orgId, setOrg, onErr)
+    const u3 = subscribeActivity(orgId, setActivity, onErr)
     return () => { u1(); u2(); u3() }
   }, [orgId])
 
