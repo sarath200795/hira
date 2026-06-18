@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   updateProfile,
   deleteUser,
+  sendPasswordResetEmail,
 } from 'firebase/auth'
 import { auth, isFirebaseConfigured } from '../firebase'
 import {
@@ -83,6 +84,12 @@ export function AuthProvider({ children }) {
     await refreshProfile(cred.user.uid)
   }
 
+  // Send a password-reset email. The user follows the link in the email to
+  // choose a new password (handled by Firebase's hosted reset flow).
+  const resetPassword = async (email) => {
+    await sendPasswordResetEmail(auth, email)
+  }
+
   const signOut = async () => {
     await fbSignOut(auth)
     setProfile(null)
@@ -99,6 +106,7 @@ export function AuthProvider({ children }) {
     registerOrganization,
     signUpMember,
     login,
+    resetPassword,
     signOut,
     refreshProfile: () => user && refreshProfile(user.uid),
   }
