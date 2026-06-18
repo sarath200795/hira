@@ -11,6 +11,7 @@ import SetupNeeded from './pages/SetupNeeded'
 // Route-level code splitting — each page is fetched only when navigated to.
 const Login = lazy(() => import('./pages/Login'))
 const Signup = lazy(() => import('./pages/Signup'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const RegisterOrg = lazy(() => import('./pages/RegisterOrg'))
 const Legal = lazy(() => import('./pages/Legal'))
 
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register-org" element={<RegisterOrg />} />
           <Route path="/privacy" element={<Legal kind="privacy" />} />
           <Route path="/terms" element={<Legal kind="terms" />} />
