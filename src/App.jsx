@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import { RaProvider } from './context/RaContext'
@@ -35,38 +34,35 @@ function AppShell() {
 }
 
 export default function App() {
-  const location = useLocation()
   if (!isFirebaseConfigured) return <SetupNeeded />
   return (
     <Suspense fallback={<FullScreenLoader label="Loading…" />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/register-org" element={<RegisterOrg />} />
-          <Route path="/privacy" element={<Legal kind="privacy" />} />
-          <Route path="/terms" element={<Legal kind="terms" />} />
-          <Route path="/data-retention" element={<Legal kind="retention" />} />
-          <Route path="/cookies" element={<Legal kind="cookies" />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/register-org" element={<RegisterOrg />} />
+        <Route path="/privacy" element={<Legal kind="privacy" />} />
+        <Route path="/terms" element={<Legal kind="terms" />} />
+        <Route path="/data-retention" element={<Legal kind="retention" />} />
+        <Route path="/cookies" element={<Legal kind="cookies" />} />
 
-          <Route path="/app" element={<AppShell />}>
-            <Route index element={<Navigate to="/app/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="create" element={<CreateAssessment />} />
-            <Route path="create/:id" element={<CreateAssessment />} />
-            <Route path="repository" element={<Repository />} />
-            <Route path="assessment/:id" element={<AssessmentView />} />
-            <Route path="risk-register" element={<RiskRegister />} />
-            <Route path="action-tracker" element={<ActionTracker />} />
-            <Route path="organization" element={<Organization />} />
-            <Route path="bulk-import" element={<BulkImport />} />
-          </Route>
+        <Route path="/app" element={<AppShell />}>
+          <Route index element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="create" element={<CreateAssessment />} />
+          <Route path="create/:id" element={<CreateAssessment />} />
+          <Route path="repository" element={<Repository />} />
+          <Route path="assessment/:id" element={<AssessmentView />} />
+          <Route path="risk-register" element={<RiskRegister />} />
+          <Route path="action-tracker" element={<ActionTracker />} />
+          <Route path="organization" element={<Organization />} />
+          <Route path="bulk-import" element={<BulkImport />} />
+        </Route>
 
-          <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
-        </Routes>
-      </AnimatePresence>
+        <Route path="*" element={<Navigate to="/app/dashboard" replace />} />
+      </Routes>
     </Suspense>
   )
 }
