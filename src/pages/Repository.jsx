@@ -77,7 +77,7 @@ export default function Repository() {
 
   return (
     <div>
-      <PageHeader title="Repository" subtitle="Browse and filter all risk assessments." icon={FolderOpen}>
+      <PageHeader tour="repository-header" title="Repository" subtitle="Browse and filter all risk assessments." icon={FolderOpen}>
         <Link to="/app/create" className="btn-primary"><FilePlus2 size={16} /> New assessment</Link>
       </PageHeader>
 

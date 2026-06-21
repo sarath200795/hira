@@ -185,7 +185,7 @@ export default function CreateAssessment() {
 
   return (
     <form onSubmit={onSubmit}>
-      <PageHeader title={id ? 'Edit Risk Assessment' : 'Create Risk Assessment'} subtitle="Hazard identification & risk assessment (HIRA)" icon={FilePlus2}>
+      <PageHeader tour="create-header" title={id ? 'Edit Risk Assessment' : 'Create Risk Assessment'} subtitle="Hazard identification & risk assessment (HIRA)" icon={FilePlus2}>
         <button type="submit" className="btn-primary" disabled={busy}>
           {busy ? <Spinner size={18} /> : (<><Save size={16} /> {id ? 'Save changes' : 'Save assessment'}</>)}
         </button>
