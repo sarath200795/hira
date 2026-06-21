@@ -1,0 +1,68 @@
+rules_version = '2';
+
+// Unified engine — starter ruleset for the SHARED Firebase project.
+// Contains the consolidated identity helpers + canonical sites + hira's domain
+// collections. As more apps are ported, their (collision-namespaced) domain
+// collections are appended here (see plan §"Shared Firebase consolidation").
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Core identity helpers (single canonical copy for all apps) ───────────
+    function signedIn() {
+      return request.auth != null;
+    }
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isApprovedMemberOf(orgId) {
+      return signedIn()
+        && myProfile().orgId == orgId
+        && myProfile().status == 'approved';
+    }
+    function isAdminOf(orgId) {
+      return isApprovedMemberOf(orgId) && myProfile().role == 'admin';
+    }
+
+    // ── Public org index (signup dropdown) ───────────────────────────────────
+    match /orgIndex/{slug} {
+      allow read: if true;
+      allow write: if signedIn(); // tightened during migration
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // A user can read their own profile; org admins can read org members.
+      allow read: if signedIn() && (request.auth.uid == uid
+        || resource.data.orgId == myProfile().orgId);
+      // Self-create on signup; self-update of own profile; admins manage members.
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow update: if signedIn() && (request.auth.uid == uid
+        || isAdminOf(resource.data.orgId));
+      allow delete: if signedIn() && isAdminOf(resource.data.orgId);
+    }
+
+    // ── Organizations + canonical sites subcollection ────────────────────────
+    match /organizations/{orgId} {
+      allow read: if isApprovedMemberOf(orgId);
+      allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAdminOf(orgId);
+
+      // Unified Site Management (engine-owned, shared by all apps).
+      match /sites/{siteId} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow write: if isAdminOf(orgId);
+      }
+
+      // hira domain: risk assessments + activity log.
+      match /assessments/{id} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create, update: if isApprovedMemberOf(orgId);
+        allow delete: if isAdminOf(orgId);
+      }
+      match /activity/{id} {
+        allow read: if isApprovedMemberOf(orgId);
+        allow create: if isApprovedMemberOf(orgId);
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "unified-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Unified HSE engine — single login + tiles for fire-marshal, hecp-loto, hira, hse-committee, incident-ira, inspections, internal-audit; shared site & user/role management.",
+  "scripts": {
+    "dev": "pnpm --filter @unified/engine dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "check:routes": "node scripts/check-app-prefix.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

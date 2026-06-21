@@ -1,0 +1,149 @@
+/* hira app stylesheet — vendored into the unified engine.
+   NOTE: the engine owns @tailwind base/components/utilities and the global
+   body/html resets (apps/engine/src/index.css). This file keeps ONLY hira's
+   component classes + decorative helpers so it doesn't restyle the whole shell. */
+:root {
+  /* Strong custom easing curves used by hira's component classes. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Display typeface (Sora) for prominent headings within hira pages.
+   NOTE: not wrapped in @layer because the engine owns @tailwind base; this file
+   is processed standalone, so plain rules + @apply are used instead. */
+.hira-scope h1,
+.hira-scope h2,
+h1,
+h2 {
+  @apply font-display tracking-tight;
+}
+
+/* Keyboard focus: a crisp ring on buttons/links (inputs have their own ring). */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid theme('colors.brand.400');
+  outline-offset: 2px;
+}
+
+/* Reduced motion: keep opacity/colour transitions, drop movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Animated aurora background used on auth + public pages */
+.aurora {
+  background:
+    radial-gradient(40% 50% at 15% 20%, rgba(59, 130, 246, 0.35), transparent 60%),
+    radial-gradient(40% 50% at 85% 15%, rgba(96, 165, 250, 0.30), transparent 60%),
+    radial-gradient(50% 60% at 75% 85%, rgba(29, 78, 216, 0.30), transparent 60%),
+    radial-gradient(40% 50% at 20% 90%, rgba(99, 102, 241, 0.20), transparent 60%),
+    #0b0e16;
+  background-size: 200% 200%;
+  animation: aurora-move 18s ease infinite;
+}
+
+@keyframes aurora-move {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: content-box; }
+
+/* Reusable component classes (plain CSS — engine owns the Tailwind layers) */
+
+  /* ── Clean modern surfaces (cool neutral + blue accent) ───────────────────
+     White cards with hairline borders and soft elevation; bordered inputs;
+     pressable controls give a subtle scale on :active. Blue = accent. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97];
+    transition-property: transform, background-color, box-shadow, color, border-color;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700 shadow-clay-brand;
+  }
+  .btn-ghost {
+    @apply btn border border-clay-200 bg-clay-surface text-ink-700 shadow-clay-sm hover:bg-clay-50 hover:border-clay-300;
+  }
+  .btn-soft {
+    @apply btn bg-brand-50 text-brand-700 hover:bg-brand-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white shadow-[0_6px_16px_-4px_rgba(220,38,38,0.40)] hover:bg-red-700;
+  }
+  .input {
+    @apply w-full rounded-xl border border-clay-200 bg-clay-surface px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100;
+    transition-property: border-color, box-shadow, background-color;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out);
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .card {
+    @apply rounded-2xl border border-clay-200/70 bg-clay-surface shadow-card;
+    transition-property: box-shadow, border-color, transform;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-out);
+  }
+  /* Cards that are links/buttons get a gentle lift + accent border on hover. */
+  a.card:hover,
+  button.card:hover {
+    @apply -translate-y-0.5 border-brand-200;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 16px 36px -16px rgba(37, 99, 235, 0.35);
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
+    transition: transform 150ms var(--ease-out), background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  }
+  button.chip:active {
+    @apply scale-[0.95];
+  }
+
+  /* Helper surfaces for elements that don't use .card/.btn */
+  .clay {
+    @apply rounded-2xl border border-clay-200/70 bg-clay-surface shadow-card;
+  }
+  .clay-inset {
+    @apply rounded-xl border border-clay-200 bg-clay-50;
+  }
+  .clay-pressed {
+    @apply rounded-xl bg-clay-100 shadow-clay-pressed;
+  }
+
+@media print {
+  .no-print { display: none !important; }
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}

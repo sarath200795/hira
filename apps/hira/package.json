@@ -1,0 +1,28 @@
+{
+  "name": "@unified/app-hira",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/module.jsx",
+  "exports": {
+    ".": "./src/module.jsx"
+  },
+  "dependencies": {
+    "@unified/shared-auth": "workspace:*",
+    "@unified/shared-firebase": "workspace:*",
+    "@unified/shared-sites": "workspace:*",
+    "@unified/shared-ui": "workspace:*",
+    "date-fns": "^3.6.0",
+    "firebase": "^10.12.2",
+    "framer-motion": "^11.2.10",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
+    "lucide-react": "^0.395.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.4.1",
+    "react-router-dom": "^6.23.1",
+    "recharts": "^2.12.7"
+  }
+}

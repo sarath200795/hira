@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The ENGINE owns global resets. Ported apps must NOT set body/:root/html
+   styles (they would restyle the whole shell); their themes are scoped under a
+   per-app root class instead. */
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: theme('colors.clay.bg');
+  color: theme('colors.ink.900');
+  font-family: theme('fontFamily.sans');
+  -webkit-font-smoothing: antialiased;
+}
