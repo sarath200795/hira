@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense, Component } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion, useMotionValue, animate } from 'framer-motion'
-import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle } from 'lucide-react'
+import { X, Send, Sparkles, Lightbulb, Move, EyeOff, MessageCircle, ArrowRight } from 'lucide-react'
 import { useRa } from '../context/RaContext'
 import { useAuth } from '../context/AuthContext'
-import { pageGuide, suggestedQuestions, answer, askAI, buildAIContext } from '../lib/assistant'
+import { pageGuide, suggestedQuestions, answer, askAI, buildAIContext, TUTORIAL_STEPS } from '../lib/assistant'
 
 // 3D character is heavy (three.js) — load it only when needed. The auto wrapper
 // uses a realistic rigged .glb if one is present, else the procedural figure.
@@ -185,6 +185,7 @@ export default function Assistant() {
   const [mode, setMode] = useState('idle')
   const [facing, setFacing] = useState(-1)
   const [asleep, setAsleep] = useState(false)
+  const [tour, setTour] = useState(-1) // -1 = inactive; otherwise current step index
   const [pinned, setPinned] = useState(() => ls.get(`hira:guide:pinned:${uid}`) === '1')
 
   const savedPos = useMemo(() => { try { return JSON.parse(ls.get(`hira:guide:pos:${uid}`) || 'null') } catch { return null } }, [uid])
@@ -201,6 +202,41 @@ export default function Assistant() {
   const writingPage = location.pathname.includes('/create')
   const homeX = () => Math.max(20, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 96)
 
+  // ── First-login guided tour ──────────────────────────────────────────────
+  const tourActive = tour >= 0 && tour < TUTORIAL_STEPS.length
+  const tourDoneKey = `hira:guide:tour:${uid}`
+  const tourStartedRef = useRef(false)
+  const endTour = () => { setTour(-1); setMode('idle'); ls.set(tourDoneKey, '1') }
+  const nextTour = () => { if (tour + 1 >= TUTORIAL_STEPS.length) endTour(); else setTour(tour + 1) }
+
+  // Kick off the walkthrough once per user, ever, shortly after first sign-in.
+  useEffect(() => {
+    if (!enabled || !user?.uid || tourStartedRef.current) return undefined
+    if (ls.get(tourDoneKey) === '1') return undefined
+    tourStartedRef.current = true
+    setTip(null)
+    const t = setTimeout(() => setTour(0), 1500)
+    return () => clearTimeout(t)
+  }, [enabled, user, tourDoneKey])
+
+  // Drive Sam through each step: walk to the spot, then wave. No page changes —
+  // the tour is purely Sam walking across the screen with tip cards.
+  useEffect(() => {
+    if (!tourActive) return undefined
+    const step = TUTORIAL_STEPS[tour]
+    setOpen(false); setTip(null)
+    lastRef.current = Date.now(); setAsleep(false)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1000
+    const target = Math.round((step.xf ?? 0.1) * Math.max(320, vw - 130))
+    setFacing(target >= mx.get() ? 1 : -1)
+    setMode('walk')
+    const anim = animate(mx, target, { duration: reduced ? 0.2 : 0.9, ease: 'easeInOut' })
+    animate(my, 0, { duration: 0.3 })
+    const t = setTimeout(() => setMode('wave'), reduced ? 220 : 950)
+    return () => { if (anim?.stop) anim.stop(); clearTimeout(t) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tour])
+
   // Idle → sleep after 3 minutes of no activity; any activity wakes Sam.
   useEffect(() => {
     const bump = () => { lastRef.current = Date.now(); if (asleepRef.current) setAsleep(false) }
@@ -213,6 +249,7 @@ export default function Assistant() {
   // Movement / pose state machine.
   useEffect(() => {
     if (!enabled) return undefined
+    if (tour >= 0) return undefined // the guided tour drives Sam
     if (asleep) { setMode('sleep'); return undefined }
     if (open || tip) {
       if (!pinned) { setFacing(-1); animate(mx, homeX(), { duration: 0.7, ease: 'linear' }); animate(my, 0, { duration: 0.4 }) }
@@ -247,11 +284,13 @@ export default function Assistant() {
     }
     t = setTimeout(step, 1400)
     return () => { alive = false; clearTimeout(t); if (anim?.stop) anim.stop() }
-  }, [enabled, asleep, open, tip, writingPage, reduced, pinned, mx, my])
+  }, [enabled, tour, asleep, open, tip, writingPage, reduced, pinned, mx, my])
 
   // Login greeting (once per browser session) → then per-page tips.
   useEffect(() => {
-    if (!enabled || open) return undefined
+    if (!enabled || open || tour >= 0) return undefined
+    // The first-login tour delivers the welcome; don't also show the greeting.
+    if (ls.get(`hira:guide:tour:${uid}`) !== '1') return undefined
     const greetKey = `hira:guide:greeted:${uid}`
     const greeted = (() => { try { return sessionStorage.getItem(greetKey) === '1' } catch { return false } })()
     if (!greeted) {
@@ -265,7 +304,7 @@ export default function Assistant() {
     const seenKey = `hira:guide:tip:${uid}:${guide.title}`
     if (ls.get(seenKey) !== '1') { const t = setTimeout(() => setTip({ title: guide.title, text: guide.tips[0] }), 900); return () => clearTimeout(t) }
     return undefined
-  }, [location.pathname, open, uid, guide, enabled])
+  }, [location.pathname, open, uid, guide, enabled, tour])
 
   const dismissTip = () => {
     if (tip && !tip.greeting) ls.set(`hira:guide:tip:${uid}:${guide.title}`, '1')
@@ -380,6 +419,40 @@ export default function Assistant() {
         )}
       </AnimatePresence>
 
+      {/* First-login guided tour card */}
+      <AnimatePresence>
+        {tourActive && !open && (
+          <motion.div
+            key={tour}
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed bottom-32 left-1/2 z-50 w-[330px] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-2xl border border-clay-200 bg-clay-surface p-4 shadow-card"
+          >
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-600">
+                <Sparkles size={13} /> Guided tour
+              </span>
+              <span className="text-[11px] font-semibold text-ink-400">{tour + 1} / {TUTORIAL_STEPS.length}</span>
+            </div>
+            <p className="mt-1.5 text-sm font-bold text-ink-900">{TUTORIAL_STEPS[tour].title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-600">{TUTORIAL_STEPS[tour].text}</p>
+            <div className="mt-2.5 flex items-center gap-1">
+              {TUTORIAL_STEPS.map((_, i) => (
+                <span key={i} className={`h-1.5 rounded-full transition-all ${i === tour ? 'w-4 bg-brand-600' : 'w-1.5 bg-clay-300'}`} />
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <button onClick={endTour} className="text-xs font-semibold text-ink-400 hover:text-ink-700">Skip tour</button>
+              <button onClick={nextTour} className="btn-primary px-3 py-1.5 text-xs">
+                {tour + 1 >= TUTORIAL_STEPS.length ? 'Finish' : (<>Next <ArrowRight size={13} /></>)}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Assistant panel */}
       <AnimatePresence>
         {open && (
@@ -418,11 +491,12 @@ export default function Assistant() {
               <button type="submit" className="btn-primary px-3 py-2" disabled={!input.trim() || asking}><Send size={16} /></button>
             </form>
 
-            {/* Controls: roam/pin + hide */}
+            {/* Controls: roam/pin + replay tour + hide */}
             <div className="flex items-center justify-between gap-2 px-3 py-2 text-[11px] text-ink-400">
               <button onClick={setRoam} className="inline-flex items-center gap-1 hover:text-ink-700" disabled={!pinned}>
                 <Move size={12} /> {pinned ? 'Let Sam roam' : 'Drag Sam to pin him'}
               </button>
+              <button onClick={() => { setOpen(false); setTour(0) }} className="inline-flex items-center gap-1 hover:text-ink-700"><Sparkles size={12} /> Replay tour</button>
               <button onClick={disableGuide} className="inline-flex items-center gap-1 hover:text-ink-700"><EyeOff size={12} /> Hide guide</button>
             </div>
           </motion.div>
