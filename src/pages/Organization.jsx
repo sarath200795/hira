@@ -45,7 +45,7 @@ export default function Organization() {
 
   return (
     <div>
-      <PageHeader title="Organization" subtitle="Manage your organization’s sites / facilities." icon={Building2} />
+      <PageHeader tour="org-header" title="Organization" subtitle="Manage your organization’s sites / facilities." icon={Building2} />
 
       {/* Org details */}
       <div className="card mb-4 grid gap-4 p-5 sm:grid-cols-2">

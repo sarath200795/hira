@@ -63,7 +63,7 @@ export default function RiskRegister() {
 
   return (
     <div>
-      <PageHeader title="Risk Register" subtitle="Acceptable / Non-Acceptable, ALARP and high-priority risks." icon={ShieldAlert} />
+      <PageHeader tour="risk-header" title="Risk Register" subtitle="Acceptable / Non-Acceptable, ALARP and high-priority risks." icon={ShieldAlert} />
 
       {/* Grouped tabs */}
       <div className="card mb-4 flex flex-col gap-3 p-4">

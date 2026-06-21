@@ -114,7 +114,7 @@ export default function ActionTracker() {
 
   return (
     <div>
-      <PageHeader title="Action Tracker" subtitle="Additional control measures (CAPA) — status & due dates." icon={CalendarClock} />
+      <PageHeader tour="actions-header" title="Action Tracker" subtitle="Additional control measures (CAPA) — status & due dates." icon={CalendarClock} />
 
       <div className="card mb-4 flex flex-wrap items-center gap-2 p-4">
         {FILTERS.map((f) => (

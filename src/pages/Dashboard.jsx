@@ -182,7 +182,7 @@ export default function Dashboard() {
           </div>
 
           {/* KPI cards */}
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+          <div data-tour="dash-kpis" className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
             {kpis.map((k, i) => {
               const inner = (
                 <>
@@ -229,7 +229,7 @@ export default function Dashboard() {
             </div>
           </ChartCard>
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div data-tour="dash-charts" className="grid gap-4 lg:grid-cols-3">
             <ChartCard title="By Risk Level" subtitle="Share of hazards per band">
               <Donut data={bandData} />
             </ChartCard>
