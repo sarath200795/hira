@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@unified/app-hira": "workspace:*",
+    "@unified/app-inspections": "workspace:*",
     "lucide-react": "^0.395.0"
   }
 }

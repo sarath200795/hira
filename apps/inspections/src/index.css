@@ -1,0 +1,110 @@
+/* inspections app stylesheet — vendored into the unified engine.
+   The engine owns @tailwind base/components/utilities and global body/html
+   resets; this file keeps ONLY inspections' component classes + decoration. */
+:root {
+  /* Custom easing curves for intentional UI motion. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Animated aurora background used on auth + public pages (magenta palette) */
+.aurora {
+  background:
+    radial-gradient(40% 50% at 15% 20%, rgba(217, 70, 239, 0.38), transparent 60%),
+    radial-gradient(40% 50% at 85% 15%, rgba(232, 121, 249, 0.30), transparent 60%),
+    radial-gradient(50% 60% at 75% 85%, rgba(162, 28, 175, 0.34), transparent 60%),
+    radial-gradient(40% 50% at 20% 90%, rgba(124, 58, 237, 0.22), transparent 60%),
+    #0b0e16;
+  background-size: 200% 200%;
+  animation: aurora-move 18s ease infinite;
+}
+
+@keyframes aurora-move {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Glass card */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Custom scrollbar (lavender) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d6c2e2; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: #c2a6d4; background-clip: content-box; }
+.custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+
+/* Reusable component classes (plain CSS — engine owns the Tailwind layers) */
+  /* ── Claymorphism core surfaces (cool lavender-clay) ──────────────────────
+     Raised = light top-left highlight + mauve bottom-right drop. Inputs are
+     recessed (inset). Pressable controls sink on :active. Magenta = accent. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold shadow-clay-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none active:scale-[0.97] active:shadow-clay-pressed;
+    transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background-color 140ms var(--ease-out);
+  }
+  .btn-primary {
+    @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-clay-brand;
+  }
+  .btn-ghost {
+    @apply btn bg-clay-surface text-ink-700 hover:bg-clay-100;
+  }
+  .btn-soft {
+    @apply btn bg-brand-50 text-brand-700 hover:bg-brand-100;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 shadow-[5px_5px_12px_rgba(220,38,38,0.28),-5px_-5px_12px_rgba(255,255,255,0.75)];
+  }
+  .input {
+    @apply w-full rounded-2xl border border-transparent bg-clay-surface px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 outline-none shadow-clay-inset focus:border-brand-300 focus:ring-2 focus:ring-brand-200;
+    transition: box-shadow 150ms var(--ease-out), border-color 150ms var(--ease-out);
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-500;
+  }
+  .card {
+    @apply rounded-3xl bg-clay-surface shadow-clay;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-clay-sm;
+    transition: transform 140ms var(--ease-out), background-color 140ms var(--ease-out), color 140ms var(--ease-out);
+  }
+  button.chip:active {
+    transform: scale(0.96);
+  }
+  .clay {
+    @apply rounded-3xl bg-clay-surface shadow-clay;
+  }
+  .clay-inset {
+    @apply rounded-2xl bg-clay-surface shadow-clay-inset;
+  }
+  .clay-pressed {
+    @apply rounded-2xl bg-clay-surface shadow-clay-pressed;
+  }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .aurora { animation: none !important; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { size: A4; margin: 12mm; }
+}

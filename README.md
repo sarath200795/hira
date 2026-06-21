@@ -7,9 +7,14 @@ and **shared Site Management + User & Role Management**, all on **one shared
 Firebase project**.
 
 > Status: **Phase 1 + 2 scaffold.** The engine shell, shared auth/firebase/sites,
-> tiles dashboard, cumulative Action Tracker, and the two admin tabs are built,
-> and **hira is fully ported** as the reference app. The other six apps appear as
-> "coming soon" tiles until they are ported the same way.
+> tiles dashboard, cumulative Action Tracker, and the two admin tabs are built.
+> **hira** (name-based site adapter) and **inspections** (canonical `siteId`
+> subcollection — pass-through adapter) are fully ported. The other five apps
+> appear as "coming soon" tiles until ported the same way.
+>
+> Known follow-up: each app's component CSS classes (`.btn`, `.card`, …) are
+> currently global and stylistically compatible; per-app theme scoping (palette
+> via CSS vars under a `.theme-<id>` root) is deferred per the plan.
 
 ## Architecture
 
@@ -61,7 +66,7 @@ pnpm check:routes                  # gate: no legacy /app/ prefixes in ported ap
 Without `apps/engine/.env`, the app renders a "Firebase isn't configured" screen.
 
 ## Remaining work (next rounds)
-- Port the other six apps the same way (hecp-loto last — RBAC/permissions).
+- Port the remaining five apps the same way (hecp-loto last — RBAC/permissions).
 - Flesh out `shared-sites` adapters for name-based (hecp) and free-text
   (fire-marshal, incident-ira) apps.
 - Merge each app's domain Firestore rules (collision-namespaced) into
