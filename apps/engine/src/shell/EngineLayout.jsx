@@ -92,6 +92,11 @@ export default function EngineLayout() {
       </aside>
 
       <main className="flex-1 min-w-0">
+        {import.meta.env.VITE_DEMO_MODE === 'true' && (
+          <div className="bg-amber-500 px-4 py-1.5 text-center text-xs font-semibold text-white">
+            Demo mode — sample data, no backend. Changes are in-memory only and reset on refresh.
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

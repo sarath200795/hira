@@ -6,6 +6,8 @@
   "description": "Unified HSE engine — single login + tiles for fire-marshal, hecp-loto, hira, hse-committee, incident-ira, inspections, internal-audit; shared site & user/role management.",
   "scripts": {
     "dev": "pnpm --filter @unified/engine dev",
+    "dev:demo": "pnpm --filter @unified/engine dev:demo",
+    "build:demo": "pnpm --filter @unified/engine build:demo",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check:routes": "node scripts/check-app-prefix.mjs"

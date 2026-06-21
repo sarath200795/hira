@@ -53,7 +53,26 @@ canonical subcollection via `useHiraSites`).
 profile, cb)` into one normalized, filterable list (hira contributes its open
 risk-control actions).
 
-## Develop
+## Demo mode (no Firebase needed) ⭐
+
+Run the entire engine with **zero backend** — an auto-signed-in demo admin and
+seeded data so the shell, tiles, all ported apps, Site/User admin, and the
+Action Tracker are fully explorable:
+
+```bash
+pnpm install
+pnpm dev:demo        # http://localhost:5180  (no .env, no keys)
+# or a static build:
+pnpm build:demo && pnpm --filter @unified/engine preview
+```
+
+How it works: `VITE_DEMO_MODE=true` (in `apps/engine/.env.demo`) makes
+`apps/engine/vite.config.js` alias the `firebase/*` SDK entry points to in-memory
+mocks in `packages/demo-firebase/` (Firestore + Auth + Storage), seeded by
+`packages/demo-firebase/src/seed.js`. No app data code changes. Writes persist
+in-memory only and reset on refresh.
+
+## Develop against real Firebase
 
 ```bash
 pnpm install
@@ -63,7 +82,8 @@ pnpm build                         # turbo build
 pnpm check:routes                  # gate: no legacy /app/ prefixes in ported apps
 ```
 
-Without `apps/engine/.env`, the app renders a "Firebase isn't configured" screen.
+Without `apps/engine/.env` (and not in demo mode), the app renders a "Firebase
+isn't configured" screen.
 
 ## Remaining work (next rounds)
 - Port the remaining five apps the same way (hecp-loto last — RBAC/permissions).

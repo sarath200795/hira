@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserSessionPersistence } from 'firebase/auth'
 import { getFirestore, initializeFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
+import { seedDemoData } from '@unified/demo-firebase'
 
 /**
  * Single Firebase init for the whole unified engine (ONE shared project).
@@ -30,7 +31,14 @@ const firebaseConfig = {
 
 const dbId = cleanEnv(import.meta.env.VITE_FIREBASE_DB_ID)
 
-export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
+// Demo mode: firebase/* imports are aliased to in-memory mocks (see the engine's
+// vite.config.js). Treat as "configured" so the app skips the SetupNeeded gate,
+// and seed the in-memory store once.
+export const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+// Seed synchronously so the demo profile exists before auth state resolves.
+if (isDemoMode) seedDemoData()
+
+export const isFirebaseConfigured = isDemoMode || Boolean(firebaseConfig.apiKey && firebaseConfig.projectId)
 
 if (!isFirebaseConfigured && typeof console !== 'undefined') {
   // eslint-disable-next-line no-console

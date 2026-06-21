@@ -3,6 +3,7 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.demo
 .turbo/
 *.local
 .DS_Store

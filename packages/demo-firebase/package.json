@@ -1,0 +1,14 @@
+{
+  "name": "@unified/demo-firebase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./app": "./src/mock-app.js",
+    "./auth": "./src/mock-auth.js",
+    "./firestore": "./src/mock-firestore.js",
+    "./storage": "./src/mock-storage.js"
+  }
+}

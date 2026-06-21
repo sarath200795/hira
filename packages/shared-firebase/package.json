@@ -8,6 +8,7 @@
     ".": "./src/index.js"
   },
   "dependencies": {
+    "@unified/demo-firebase": "workspace:*",
     "firebase": "^10.12.2"
   }
 }

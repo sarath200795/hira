@@ -211,6 +211,8 @@ importers:
         specifier: ^0.395.0
         version: 0.395.0(react@18.3.1)
 
+  packages/demo-firebase: {}
+
   packages/shared-auth:
     dependencies:
       '@unified/shared-firebase':
@@ -231,6 +233,9 @@ importers:
 
   packages/shared-firebase:
     dependencies:
+      '@unified/demo-firebase':
+        specifier: workspace:*
+        version: link:../demo-firebase
       firebase:
         specifier: ^10.12.2
         version: 10.14.1
