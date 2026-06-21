@@ -56,6 +56,14 @@ module.exports = {
         'clay-inset': 'inset 0 1px 2px rgba(16,24,40,0.06)',
         'clay-pressed': 'inset 0 2px 4px rgba(16,24,40,0.10)',
         'clay-brand': '0 6px 16px -4px rgba(37,99,235,0.40)',
+        // from internal-audit
+        input: 'inset 0 1px 2px rgba(15,23,42,0.06), 0 1px 0 rgba(255,255,255,0.7)',
+        brand: '0 8px 24px rgba(37,99,235,0.32)',
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+        'auth-panel':
+          'radial-gradient(1200px 600px at 0% 0%, rgba(37,99,235,0.22), transparent 55%), linear-gradient(160deg, #0b1226 0%, #0a0e18 55%, #06080f 100%)',
       },
       keyframes: {
         shimmer: { '100%': { transform: 'translateX(100%)' } },
@@ -65,11 +73,16 @@ module.exports = {
           '70%': { boxShadow: '0 0 0 14px rgba(59,130,246,0)' },
           '100%': { boxShadow: '0 0 0 0 rgba(59,130,246,0)' },
         },
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         shimmer: 'shimmer 2s infinite',
         float: 'float 6s ease-in-out infinite',
         pulseRing: 'pulseRing 2s infinite',
+        'fade-in': 'fade-in 0.4s ease-out both',
       },
     },
   },

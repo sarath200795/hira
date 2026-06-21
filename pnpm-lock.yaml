@@ -163,6 +163,39 @@ importers:
         specifier: ^0.18.5
         version: 0.18.5
 
+  apps/internal-audit:
+    dependencies:
+      '@unified/shared-auth':
+        specifier: workspace:*
+        version: link:../../packages/shared-auth
+      '@unified/shared-firebase':
+        specifier: workspace:*
+        version: link:../../packages/shared-firebase
+      '@unified/shared-sites':
+        specifier: workspace:*
+        version: link:../../packages/shared-sites
+      '@unified/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
+      firebase:
+        specifier: ^10.12.2
+        version: 10.14.1
+      framer-motion:
+        specifier: ^11.2.10
+        version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      lucide-react:
+        specifier: ^0.395.0
+        version: 0.395.0(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+
   packages/app-registry:
     dependencies:
       '@unified/app-hira':
@@ -171,6 +204,9 @@ importers:
       '@unified/app-inspections':
         specifier: workspace:*
         version: link:../../apps/inspections
+      '@unified/app-internal-audit':
+        specifier: workspace:*
+        version: link:../../apps/internal-audit
       lucide-react:
         specifier: ^0.395.0
         version: 0.395.0(react@18.3.1)

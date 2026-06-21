@@ -1,0 +1,276 @@
+/* internal-audit app stylesheet — vendored into the unified engine.
+   Engine owns @tailwind base/components/utilities + global body/html resets;
+   this file keeps ONLY internal-audit's component classes + decoration. */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Component classes (plain CSS — engine owns the Tailwind layers) */
+
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-slate-200 bg-white/80 py-3 pl-11 pr-4 text-sm text-ink-800 shadow-input outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/30;
+  }
+
+  .btn-primary {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-700 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .link-accent {
+    @apply font-semibold text-brand-600 transition hover:text-brand-700;
+  }
+
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-card;
+  }
+
+  /* Claymorphism surface: soft, inflated, double-shadow */
+  .clay {
+    @apply rounded-3xl bg-slate-50;
+    box-shadow:
+      4px 4px 12px rgba(148, 163, 184, 0.16),
+      -4px -4px 12px rgba(255, 255, 255, 0.85);
+  }
+
+  .clay-tile {
+    @apply clay cursor-pointer;
+    /* Only animate transform/box-shadow; never `all` */
+    transition:
+      transform 200ms var(--ease-out),
+      box-shadow 200ms var(--ease-out);
+  }
+
+  /* Instant, deliberate feedback on press */
+  .clay-tile:active {
+    transform: scale(0.97);
+  }
+
+  /* Inflated icon chip */
+  .clay-chip {
+    box-shadow:
+      inset 2px 2px 5px rgba(100, 116, 139, 0.1),
+      inset -2px -2px 5px rgba(255, 255, 255, 0.85);
+  }
+
+/* Hover-lift only on real pointers (avoids sticky tap-hover on touch) */
+@media (hover: hover) and (pointer: fine) {
+  .clay-tile:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      6px 9px 20px rgba(148, 163, 184, 0.2),
+      -5px -5px 14px rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* Short, staggered tile entrance */
+@keyframes clay-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.clay-tile {
+  animation: clay-in 360ms var(--ease-out) both;
+}
+
+/* Non-interactive clay surface with the same staggered entrance */
+.clay-rise {
+  animation: clay-in 360ms var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clay-tile,
+  .clay-rise {
+    animation: none;
+    transition: none;
+  }
+  .clay-tile:hover,
+  .clay-tile:active {
+    transform: none;
+  }
+}
+
+/* ── Audit loader: a magnifier scans a document; points appear in sequence ── */
+.al-wrap {
+  @apply flex flex-col items-center justify-center gap-4;
+}
+.al-svg {
+  width: 140px;
+  height: 120px;
+  overflow: visible;
+}
+.al-label {
+  @apply text-sm font-medium text-slate-500;
+}
+.al-doc {
+  fill: #ffffff;
+  stroke: #e2e8f0;
+  stroke-width: 2.5;
+}
+.al-line {
+  fill: #e2e8f0;
+}
+.al-pt {
+  fill: #2563eb;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.al-lens {
+  fill: rgba(37, 99, 235, 0.1);
+  stroke: #2563eb;
+  stroke-width: 3.5;
+}
+.al-handle {
+  stroke: #2563eb;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+.al-glass {
+  animation: al-move 3.2s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+.al-pt1 {
+  animation: al-pop1 3.2s ease-out infinite;
+}
+.al-pt2 {
+  animation: al-pop2 3.2s ease-out infinite;
+}
+.al-pt3 {
+  animation: al-pop3 3.2s ease-out infinite;
+}
+.al-pt4 {
+  animation: al-pop4 3.2s ease-out infinite;
+}
+
+@keyframes al-move {
+  0%, 8% {
+    transform: translate(74px, 60px);
+  }
+  25% {
+    transform: translate(120px, 78px);
+  }
+  50% {
+    transform: translate(82px, 104px);
+  }
+  75% {
+    transform: translate(124px, 120px);
+  }
+  92%, 100% {
+    transform: translate(74px, 60px);
+  }
+}
+@keyframes al-pop1 {
+  0%, 4% { opacity: 0; transform: scale(0.3); }
+  12% { opacity: 1; transform: scale(1.25); }
+  16% { transform: scale(1); }
+  88% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+@keyframes al-pop2 {
+  0%, 21% { opacity: 0; transform: scale(0.3); }
+  29% { opacity: 1; transform: scale(1.25); }
+  33% { transform: scale(1); }
+  88% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+@keyframes al-pop3 {
+  0%, 46% { opacity: 0; transform: scale(0.3); }
+  54% { opacity: 1; transform: scale(1.25); }
+  58% { transform: scale(1); }
+  88% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+@keyframes al-pop4 {
+  0%, 71% { opacity: 0; transform: scale(0.3); }
+  79% { opacity: 1; transform: scale(1.25); }
+  83% { transform: scale(1); }
+  88% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-glass {
+    animation: none;
+    transform: translate(100px, 90px);
+  }
+  .al-pt {
+    opacity: 1;
+  }
+}
+
+/* ── Floating help assistant (voxel-style audit officer) ── */
+.assist-char {
+  animation: assist-bob 3s ease-in-out infinite;
+}
+.assist-arm {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: assist-wave 4.5s ease-in-out infinite;
+}
+.assist-panel {
+  transform-origin: bottom right;
+  animation: assist-in 220ms var(--ease-out) both;
+}
+@keyframes assist-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes assist-wave {
+  0%, 86%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-22deg); }
+  94% { transform: rotate(6deg); }
+}
+@keyframes assist-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.sam-leg {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+.sam-walking .sam-leg-l {
+  animation: sam-legA 0.5s linear infinite;
+}
+.sam-walking .sam-leg-r {
+  animation: sam-legB 0.5s linear infinite;
+}
+@keyframes sam-legA {
+  0%, 100% { transform: rotate(14deg); }
+  50% { transform: rotate(-14deg); }
+}
+@keyframes sam-legB {
+  0%, 100% { transform: rotate(-14deg); }
+  50% { transform: rotate(14deg); }
+}
+.sam-typing span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 1px;
+  border-radius: 9999px;
+  background: #94a3b8;
+  animation: sam-type 1s infinite ease-in-out;
+}
+.sam-typing span:nth-child(2) { animation-delay: 0.15s; }
+.sam-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes sam-type {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .assist-char,
+  .assist-arm,
+  .assist-panel,
+  .sam-walking .sam-leg-l,
+  .sam-walking .sam-leg-r,
+  .sam-typing span {
+    animation: none;
+  }
+}

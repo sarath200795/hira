@@ -88,7 +88,7 @@ export const apps = [
     color: '#4f46e5',
     basePath: '/apps/internal-audit',
     access: { roles: ['admin', 'member'] },
-    placeholder: true,
+    load: () => import('@unified/app-internal-audit'),
   },
   {
     id: 'training',
