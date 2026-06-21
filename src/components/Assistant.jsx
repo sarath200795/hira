@@ -219,13 +219,13 @@ export default function Assistant() {
     return () => clearTimeout(t)
   }, [enabled, user, tourDoneKey])
 
-  // Drive Sam through each step: navigate, walk to the spot, then wave.
+  // Drive Sam through each step: walk to the spot, then wave. No page changes —
+  // the tour is purely Sam walking across the screen with tip cards.
   useEffect(() => {
     if (!tourActive) return undefined
     const step = TUTORIAL_STEPS[tour]
     setOpen(false); setTip(null)
     lastRef.current = Date.now(); setAsleep(false)
-    if (step.to && location.pathname !== step.to) navigate(step.to)
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1000
     const target = Math.round((step.xf ?? 0.1) * Math.max(320, vw - 130))
     setFacing(target >= mx.get() ? 1 : -1)

@@ -81,15 +81,15 @@ export function pageGuide(pathname) {
 }
 
 // First-login walkthrough. Sam walks to each `xf` (fraction of the viewport
-// width), navigates to `to`, and presents the tip. Runs once per user, ever.
+// width) and presents the tip — no page navigation. Runs once per user, ever.
 export const TUTORIAL_STEPS = [
-  { title: "Hi, I'm Sam 👷", text: "Welcome to HIRA! I'll give you a quick 30-second tour. Follow me!", to: '/app/dashboard', xf: 0.06 },
-  { title: 'Your Dashboard', text: 'This is your live risk overview — key numbers, risk spread and overdue actions across every site.', to: '/app/dashboard', xf: 0.4 },
-  { title: 'Create a Risk Assessment', text: 'Start a HIRA here: list hazards, score them on the 5×5 matrix and apply the hierarchy of controls.', to: '/app/create', xf: 0.65 },
-  { title: 'Repository', text: 'Every assessment you create is stored here — search, open and manage them anytime.', to: '/app/repository', xf: 0.4 },
-  { title: 'Risk Register', text: 'All residual risks ranked by severity, with ALARP status at a glance.', to: '/app/risk-register', xf: 0.65 },
-  { title: 'Action Tracker', text: 'Track corrective actions and due dates so nothing slips. Overdue items show as a red badge on me!', to: '/app/action-tracker', xf: 0.82 },
-  { title: "You're all set! 🎉", text: 'Tap me anytime to ask about your risks, actions and assessments. Let’s make work safer!', to: '/app/dashboard', xf: 0.06 },
+  { title: "Hi, I'm Sam 👷", text: "Welcome to HIRA! I'll show you around in a few quick steps. Watch me walk you through it!", xf: 0.06 },
+  { title: 'Dashboard', text: 'Your home screen is a live risk overview — key numbers, risk spread and overdue actions across every site.', xf: 0.4 },
+  { title: 'Create a Risk Assessment', text: 'Use “Create Risk Assessment” in the sidebar to start a HIRA: list hazards, score them on the 5×5 matrix and apply the hierarchy of controls.', xf: 0.65 },
+  { title: 'Repository', text: 'Every assessment you create is stored in the Repository — search, open and manage them anytime.', xf: 0.4 },
+  { title: 'Risk Register', text: 'The Risk Register lists all residual risks ranked by severity, with ALARP status at a glance.', xf: 0.65 },
+  { title: 'Action Tracker', text: 'The Action Tracker keeps corrective actions and due dates on track. Overdue items show as a red badge on me!', xf: 0.82 },
+  { title: "You're all set! 🎉", text: 'Tap me anytime to ask about your risks, actions and assessments. Let’s make work safer!', xf: 0.06 },
 ]
 
 const COMMON_QS = ['How many overdue actions?', 'What are my critical risks?', 'Recent activity?']
