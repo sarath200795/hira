@@ -80,6 +80,18 @@ export function pageGuide(pathname) {
   return GUIDES[pageOf(pathname)] || GUIDES.dashboard
 }
 
+// First-login walkthrough. Sam walks to each `xf` (fraction of the viewport
+// width), navigates to `to`, and presents the tip. Runs once per user, ever.
+export const TUTORIAL_STEPS = [
+  { title: "Hi, I'm Sam 👷", text: "Welcome to HIRA! I'll give you a quick 30-second tour. Follow me!", to: '/app/dashboard', xf: 0.06 },
+  { title: 'Your Dashboard', text: 'This is your live risk overview — key numbers, risk spread and overdue actions across every site.', to: '/app/dashboard', xf: 0.4 },
+  { title: 'Create a Risk Assessment', text: 'Start a HIRA here: list hazards, score them on the 5×5 matrix and apply the hierarchy of controls.', to: '/app/create', xf: 0.65 },
+  { title: 'Repository', text: 'Every assessment you create is stored here — search, open and manage them anytime.', to: '/app/repository', xf: 0.4 },
+  { title: 'Risk Register', text: 'All residual risks ranked by severity, with ALARP status at a glance.', to: '/app/risk-register', xf: 0.65 },
+  { title: 'Action Tracker', text: 'Track corrective actions and due dates so nothing slips. Overdue items show as a red badge on me!', to: '/app/action-tracker', xf: 0.82 },
+  { title: "You're all set! 🎉", text: 'Tap me anytime to ask about your risks, actions and assessments. Let’s make work safer!', to: '/app/dashboard', xf: 0.06 },
+]
+
 const COMMON_QS = ['How many overdue actions?', 'What are my critical risks?', 'Recent activity?']
 const PAGE_QS = {
   dashboard: ['Give me a summary', 'Which site has the most hazards?', 'What should I do first?'],
